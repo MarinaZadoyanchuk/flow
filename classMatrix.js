@@ -489,7 +489,7 @@ function solve_solution(partition, partition_middle, alpha, gamma0, delta)
 	var vj = new Vector(2);
 	for(var i = 0; i< n; i++)
 	{
-		normal.v = get_normal(partition_middle[i].number);
+		normal.v = partition_middle[i].normal;
 		for(var j = 0; j< m; j++)
 		{
 			vj.v = calc_vj(partition[j].x, partition[j].y, partition_middle[i].x,partition_middle[i].y, delta);

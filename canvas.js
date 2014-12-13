@@ -79,7 +79,7 @@ function create_partitions(x, y, n0, n1, n2, step)
 		x += s0.x;
 		y += s0.y;
 		partition.push({x: x, y: y});
-		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, number: 1});
+		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, normal: [0, -1]});
 		i++;
 	}
 	l.x = x;
@@ -95,7 +95,7 @@ function create_partitions(x, y, n0, n1, n2, step)
 		x += s1.x; 
 		y += s1.y;
 		partition.push({x: x, y: y});
-		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, number: 2});
+		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, normal: [-1 / Math.pow(2,0.5), 1 / Math.pow(2, 0.5)]});
 		j++;
 	}
 	l.x = x;
@@ -110,7 +110,7 @@ function create_partitions(x, y, n0, n1, n2, step)
 		x += s0.x;
 		y += s0.y;
 		partition.push({x: x, y: y});
-		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, number: 3});
+		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, normal: [0, -1]});
 		k++;  
 	}
 	l.x = x;
@@ -119,6 +119,43 @@ function create_partitions(x, y, n0, n1, n2, step)
 	// console.log(length_alpha);
 	delta = (length_alpha)/(n0+n1+n2);
 	// console.log(i, j, k);
+}
+
+function create_T(x, y, n0, n1, step) {
+	partition = [{x : x, y: y}];
+	partition_middle = [];
+	for(var i = 0; i < n0; ++i) {
+		partition_middle.push({
+			x: partition[i].x + step / 2,
+			y: partition[i].y,
+			normal: [0, 1]
+		});
+		partition.push({
+			x: partition[i].x + step,
+			y: partition[i].y
+		});
+	}
+	partition_middle.push({
+		x: x + n0 * step * 0.75,
+		y: y,
+		normal: [0, -1]
+	});
+	partition.push({
+		x: x + n0 * step * 0.5,
+		y: y
+	})
+	for(var i = n0 + 1; i < n0 + n1 + 1; ++i) {
+		partition_middle.push({
+			x: partition[i].x,
+			y: partition[i].y - step / 2,
+			normal: [1, 0]
+		});
+		partition.push({
+			x: partition[i].x,
+			y: partition[i].y - step
+		});
+	}
+	delta = step;
 }
 
 function draw_axis(context, baseX, baseY, size, ratio){
@@ -325,7 +362,8 @@ jQuery(document).ready(function(){
     baseX = size.w/2;
     ratio = 450;
 	// create_partitions(0, 300,  2, 4, 2, 30);
-	create_partitions(0, 0.5,  10, 15, 10, 0.07);
+	// create_partitions(0, 0.5,  10, 15, 10, 0.07);
+	create_T(-0.5, 0.5, 20, 15, 0.05);
 
 	var context = first_canvas.getContext('2d');
  	context.transform(1, 0, 0, -1, baseX, baseY);
