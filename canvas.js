@@ -5,64 +5,7 @@ function include(url) {
     }
 include("classMatrix.js");
 
-function big_partition(w,h, step)
-{
-	var big_partition = new Array();
-	var i = -w / 2;
-	var j = -h / 2;
-
-	while(i < w / 2)
-	{
-		j = -h / 2;
-		while(j < h / 2)
-		{
-			big_partition.push({x: i, y:j});
-			j = j+step;
-		}
-		i = i+step;
-	}
-	return big_partition;
-}
-
-function get_color_by_value(value, min, max)
-{
-	return Math.floor((max - value) / (max - min) * 256);
-}
-
-function create_segment(x, y, n, step, alpha) {
-	var partition = [];
-	var partition_middle = [];
-	var last = {x : x, y: y};
-	partition.push(last);
-	var s = {
-		x : step * Math.cos(alpha),
-		y : step * Math.sin(alpha)
-	};
-	var normal = {
-		x : Math.cos(alpha + Math.PI * 0.25),
-		y : Math.sin(alpha + Math.PI * 0.25)
-	};
-	console.log(alpha);
-	console.log(normal);
-	for(var i = 0; i < n; ++i) {
-		partition_middle.push({
-			x : last.x + s.x / 2,
-			y : last.y + s.y / 2,
-			normal : normal
-		});
-		last = {
-			x : last.x + s.x,
-			y : last.y + s.y
-		};
-		partition.push(last);
-	}
-	return {
-		partition: partition,
-		partition_middle: partition_middle,
-		step: step,
-		alpha: alpha
-	}
-}
+var normal_constant = Math.PI / 2;
 
 function draw_axis(context, baseX, baseY, size, ratio){
  	context.beginPath();
@@ -131,6 +74,60 @@ function draw_axis(context, baseX, baseY, size, ratio){
 	context.closePath();
 }
 
+function big_partition(w,h, step)
+{
+	var big_partition = new Array();
+	var i = -w / 2;
+	var j = -h / 2;
+
+	while(i < w / 2)
+	{
+		j = -h / 2;
+		while(j < h / 2)
+		{
+			big_partition.push({x: i, y:j});
+			j = j+step;
+		}
+		i = i+step;
+	}
+	return big_partition;
+}
+
+function get_color_by_value(value, min, max)
+{
+	return Math.floor((max - value) / (max - min) * 256);
+}
+
+function add_segment(n, alpha, x, y) {
+	if (!(x && y) && !(x === 0)){
+		var last = this.partition[this.partition.length - 1];
+	} else {
+		var last = {x : x, y: y};
+		this.breakpoint = this.partition.length;
+	}
+	var s = {
+		x : this.step * Math.cos(alpha),
+		y : this.step * Math.sin(alpha)
+	};
+	var normal = {
+		x : Math.cos(alpha + normal_constant),
+		y : Math.sin(alpha + normal_constant)
+	};
+	for(var i = 0; i < n; ++i) {
+		this.partition_middle.push({
+			x : last.x + s.x / 2,
+			y : last.y + s.y / 2,
+			normal : normal
+		});
+		last = {
+			x : last.x + s.x,
+			y : last.y + s.y
+		};
+		this.partition.push(last);
+	}
+	return this;
+}
+
 function draw_letter(context, segment) {
 	//малюємо улюблену букву мого прізвища:)
 	
@@ -140,7 +137,11 @@ function draw_letter(context, segment) {
 	context.lineWidth = 5;
 	context.moveTo(segment.partition[0].x * ratio, segment.partition[0].y * ratio);
 	for(var i = 1; i < segment.partition.length; ++i) {
-		context.lineTo(segment.partition[i].x * ratio, segment.partition[i].y * ratio);
+		if (segment.breakpoint && i === segment.breakpoint) {
+			context.moveTo(segment.partition[i].x * ratio, segment.partition[i].y * ratio);
+		} else {
+			context.lineTo(segment.partition[i].x * ratio, segment.partition[i].y * ratio);
+		}
 	}
 	context.stroke();
 	context.closePath();
@@ -174,11 +175,21 @@ function draw_speed(context, speed, big_part) {
 	context.closePath();
 }
 
-function draw_phi(context, gamma, big_part) {
+function draw_phi(context, gamma, big_part, segment, alpha) {
 	arr_phi = new Array();
 	for(var i = 0; i<big_part.length; i++)
 	{
-		arr_phi.push(calc_phi(big_part[i].x, big_part[i].y,gamma, partition, partition_middle, alpha, delta));
+		arr_phi.push(
+			calc_phi(
+				big_part[i].x, 
+				big_part[i].y,
+				gamma, 
+				segment.partition,
+				segment.partition_middle,
+				alpha,
+				segment.step
+				)
+			);
 	}
 	phi_max = Math.max.apply(Math, arr_phi);
 	phi_min = Math.min.apply(Math, arr_phi);
@@ -190,11 +201,21 @@ function draw_phi(context, gamma, big_part) {
 	}
 }
 
-function draw_psi(context, gamma, big_part) {
+function draw_psi(context, gamma, big_part, segment, alpha) {
 	arr_psi = new Array();
 	for(var i = 0; i<big_part.length; i++)
 	{
-		arr_psi.push(calc_psi(big_part[i].x, big_part[i].y,gamma, partition, partition_middle, alpha, delta));
+		arr_psi.push(
+			calc_psi(
+				big_part[i].x,
+				big_part[i].y,
+				gamma,
+				segment.partition,
+				segment.partition_middle,
+				alpha,
+				segment.step
+				)
+			);
 	}
 	psi_max = Math.max.apply(Math, arr_psi);
 	psi_min = Math.min.apply(Math, arr_psi);
@@ -257,7 +278,31 @@ jQuery(document).ready(function(){
 	// create_partitions(0, 300,  2, 4, 2, 30);
 	// create_partitions(0, 0.5,  10, 15, 10, 0.07);
 	// create_T(-0.5, 0.5, 20, 15, 0.05);
-	var segment = create_segment(0, 0.5, 15, 0.07, Math.PI * 6 / 4);
+	var base = {
+		partition_middle: [],
+		partition: [{x: 0, y: 0.5}],
+		step: 0.07,
+		add_segment: add_segment
+	};
+	var z = base
+	.add_segment(10, 0)
+	.add_segment(15, Math.PI * 5 / 4)
+	.add_segment(10, 0)
+	;
+	base = {
+		partition_middle: [],
+		partition: [{x: -0.5, y: 0.5}],
+		step: 0.05,
+		add_segment: add_segment
+	}
+	var t = base
+	.add_segment(5, Math.PI / 2)
+	.add_segment(20, 0)
+	.add_segment(5, -Math.PI / 2)
+	.add_segment(20, -Math.PI / 2, 0, 0.8)
+	;
+	var segment = t;
+
 	var gamma0 = 1;
 	var alpha = 0;
 
@@ -274,11 +319,11 @@ jQuery(document).ready(function(){
 	}
 	window.drawer = {
 		psi: function() {
-		 	draw_psi(context, gamma, big_part);
+		 	draw_psi(context, gamma, big_part, segment, alpha);
 		 	draw_all();
 		},
 		phi: function() {
-		 	draw_phi(context, gamma, big_part);
+		 	draw_phi(context, gamma, big_part, segment, alpha);
 		 	draw_all();
 		},
 		speed: function() {
