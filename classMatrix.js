@@ -295,70 +295,67 @@ function Vector(n,a)
 		return Math.sqrt(res);
 	}
 }
-function get_max_column(a, current_row, current_column)
-{
-	var max = Math.abs(a.a[current_row][current_column]);
-	var number_max;
-	for(var p = current_row+1; p < a.n; p++)
-	{
-		if(max != Math.max(max, Math.abs(a.a[p][current_column])))
-		{
-			max = Math.max(max, Math.abs(a.a[p][current_column]));
-			number_max = p;
-		}
-	}
-	if(max != Math.abs(a.a[current_row][current_column]))
-	{
-		c = a.a[number_max];
-		a.a[number_max] = a.a[current_row];
-		a.a[current_row] = c;
-	}
-	return a;
-}
-function Gaus_method(a)
-{
-	var n = a.n;
-	var x = new Vector(a.n);
-	var b = 0;
-	for (var i = 0; i < a.n-1; i++) 
-	{
-		a = get_max_column(a, i, i);
-		for (var k = i+1; k < a.n; k++) 
-		{
-			b = a.a[k][i] / a.a[i][i];
-			for (var j = 0; j < a.m ; j++) 
-			{
-				a.a[k][j] = a.a[k][j] - b * a.a[i][j];
-			}
-		}
- 	}
- 	for(var i = a.n-1; i>= 0; i--)
- 	{
- 		var sum = 0;
- 		for(var j = i+1; j < a.m - 1; j++)
- 		{
- 			sum +=a.a[i][j]*x.v[j];
- 		}
- 		x.v[i] = (a.a[i][a.m-1] - sum)/a.a[i][i];
- 	}
- 	return x;
-}
-// a = new Matrix({a : [[2, 44, 44, 2], [8, 9, 0, -1], [2, 5, 8, 1]]});
-// console.log("test", Gaus_method(a));
-function length_line(x1, y1 , x2, y2)
-{
-	return Math.pow(Math.pow(y2-y1, 2)+Math.pow(x2-x1, 2), 0.5);
-}
 
-function calc_vj(x, y, xj, yj, delta)
+function Gaus_method(system)
+{
+	var n = system.n;
+	var A = system.a;
+
+    for (var i=0; i<n; i++) {
+        // Search for maximum in this column
+        var maxEl = Math.abs(A[i][i]);
+        var maxRow = i;
+        for(var k=i+1; k<n; k++) {
+            if (Math.abs(A[k][i]) > maxEl) {
+                maxEl = Math.abs(A[k][i]);
+                maxRow = k;
+            }
+        }
+
+        // Swap maximum row with current row (column by column)
+        for (var k=i; k<n+1; k++) {
+            var tmp = A[maxRow][k];
+            A[maxRow][k] = A[i][k];
+            A[i][k] = tmp;
+        }
+
+        // Make all rows below this one 0 in current column
+        for (k=i+1; k<n; k++) {
+            var c = -A[k][i]/A[i][i];
+            for(var j=i; j<n+1; j++) {
+                if (i==j) {
+                    A[k][j] = 0;
+                } else {
+                    A[k][j] += c * A[i][j];
+                }
+            }
+        }
+    }
+
+    // Solve equation Ax=b for an upper triangular matrix A
+    var x= new Array(n);
+    for (var i=n-1; i>-1; i--) {
+        x[i] = A[i][n]/A[i][i];
+        for (var k=i-1; k>-1; k--) {
+            A[k][n] -= A[k][i] * x[i];
+        }
+    }
+    var result = new Vector(n);
+    result.v = x;
+    return result;
+}
+// a = new Matrix({a : [[2, 44, 44, 2], [8, 9, 0, -1], [2, 5, 8, 5]]});
+// console.log("test", Gaus_method(a));
+
+function calc_vj(p, discrete_p, delta)
 { 
 	var max_length = Math.max(
-		Math.pow(x - xj, 2) + Math.pow(y - yj, 2),
+		Math.pow(p.x - discrete_p.x, 2) + Math.pow(p.y - discrete_p.y, 2),
 		Math.pow(0.5 * delta, 2)
 		);
 	// max_length = Math.sqrt(max_length);
-	var uj = (1.0 / (2 * Math.PI)) * ((yj - y) / max_length);
-	var vj = (1.0 / (2 * Math.PI)) * ((x - xj) / max_length);
+	var uj = (1.0 / (2 * Math.PI)) * ((discrete_p.y - p.y) / max_length);
+	var vj = (1.0 / (2 * Math.PI)) * ((p.x - discrete_p.x) / max_length);
 	// console.log(Math.pow(Math.pow(uj, 2) + Math.pow(vj, 2), 0.5))
 	return [uj, vj];
 }
@@ -369,12 +366,12 @@ function calc_v(x,y,gamma, partition, alpha, delta)
 	var v = new Vector(2);
 	v.v = [Math.cos(alpha), Math.sin(alpha)];
 	var M = gamma.v.length;
-	// var sum_gamma = 0;
 	var result_vector = new Vector(2);
 	var vj = new Vector(2);
+	// var sum_gamma = 0;
 	for(var i = 0; i<M; i++)
 	{
-		vj.v = calc_vj(partition[i].x, partition[i].y, x, y, delta);
+		vj.v = calc_vj({x: x, y: y}, partition[i], delta);
 		result_vector = result_vector.add(vj.mult_by_scalar(gamma.v[i]));
 		// sum_gamma += gamma.v[i];
 	}
@@ -427,7 +424,6 @@ function calc_psi(x,y,gamma, partition, partition_middle, alpha, delta)
 	var s2 = 0;
 	var result = 0;
 	var count_gamma = gamma.v.length;
-	// console.log(count_gamma, partition_middle.length);
 	var sum_all_gamma = 0;
 	var log = 0;
 	var result = 0;
@@ -460,55 +456,39 @@ function calc_psi(x,y,gamma, partition, partition_middle, alpha, delta)
 	return psi;
 }
 
-function get_normal(sw)
+function find_gamma(segment, alpha, gamma0)
 {
-	switch(sw)
-	{
-		case 1:
-		case 3:
-			return [0, -1];
-			break;
-		case 2:
-			return [-1 / Math.pow(2,0.5), 1 / Math.pow(2, 0.5)];
-			break;
-		default:
-			return [0, 0];
-			break;
-	}
-}
-function solve_solution(partition, partition_middle, alpha, gamma0, delta)
-{
-
-	var n = partition_middle.length;
-	var m = partition.length;
-	var a = new Matrix({n: n+1, m: m+1});
-	var v = new Vector(2);
-	v.v = [Math.sin(alpha), Math.cos(alpha)];
-	// console.log(n, m, a);
-	var normal = new Vector(2);
+	var system = [];
+	var current_equation;
+	var i, j;
+	var v_inf = new Vector(2);
 	var vj = new Vector(2);
-	for(var i = 0; i< n; i++)
-	{
-		normal.v = partition_middle[i].normal;
-		for(var j = 0; j< m; j++)
-		{
-			vj.v = calc_vj(partition[j].x, partition[j].y, partition_middle[i].x,partition_middle[i].y, delta);
-			a.a[i][j] = vj.scalar(normal);
+	var normal = new Vector(2);
+	v_inf.v = [Math.sin(alpha), Math.cos(alpha)];
+	for(i = 0; i < segment.partition_middle.length; ++i) {
+		normal.v = [segment.partition_middle[i].normal.x, segment.partition_middle[i].normal.y];
+		current_equation = []
+		for(j = 0; j < segment.partition.length; ++j) {
+			vj.v = calc_vj(segment.partition_middle[i], segment.partition[j], segment.step);
+			current_equation.push(vj.scalar(normal));
 		}
-		a.a[i].push(-v.scalar(normal));
-		// console.log(a.a[i]);
+		current_equation.push(-v_inf.scalar(normal))
+		system.push(current_equation);
 	}
-	for(var k = 0; k < m; k++)
-	{
-		a.a[n][k] = 1;
+	current_equation = [];
+	for(j = 0; j < segment.partition.length; ++j) {
+		current_equation.push(1);
 	}
-	a.a[n][m] = gamma0;
-	// t = a.a[0];
-	// a.a[0] = a.a[n];
-	// a.a[n] = t;
+	current_equation.push(gamma0);
+	system.push(current_equation);
 
-	return Gaus_method(a);
+
+	var m = new Matrix({m: segment.partition.length + 1, n: segment.partition_middle.length + 1});
+	m.a = system;
+	result = Gaus_method(m);
+
+	// console.table(system);
+	console.log(result.v);
+	console.log(normal.v);
+	return result;
 }
-// a = new Matrix({a: [[5,3,8,-9], [9,8,10,0], [1,2,4,1]]});
-// console.log(a);
-// console.log(Gaus_method(a));

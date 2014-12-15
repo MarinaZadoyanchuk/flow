@@ -4,16 +4,7 @@ function include(url) {
         document.getElementsByTagName('head')[0].appendChild(script);
     }
 include("classMatrix.js");
-var delta = 0;
-var partition; 
-var partition_middle;
-var alpha = 0;
-var gamma0 = 3;
 
-function get_normal_coord(y, base)
-{
-	return base - y;
-}
 function big_partition(w,h, step)
 {
 	var big_partition = new Array();
@@ -33,129 +24,44 @@ function big_partition(w,h, step)
 	return big_partition;
 }
 
-function is_value_diapason(value, diapason)
+function get_color_by_value(value, min, max)
 {
-	if(value>diapason[0] && value<diapason[1])
-		return true;
-	else
-		return false;
-}
-function get_color_by_value(value, diff_lim, phi_min)
-{
-	// var max_val = Math.max.apply(Math, value);
-	// var min_val = Math.min.apply(Math, value);
-	// diff_lim = (max_val-min_val)/15;
-	var color = 0;
-	var array_segments = new Array();
-	for (var i=0; i<255; i++)
-	{
-		// array_segments.push({diapason: new Array(diff_lim*i, diff_lim*(i+1)-1), color: 17*i});
-		if(((value>=(phi_min+diff_lim*i))) && (value<(phi_min+diff_lim*(i+1))))
-			return 255 - i;
-	}
-	
-}
-function create_partitions(x, y, n0, n1, n2, step)
-{
-	var i = 1;
-	var j = 1;
-	var k = 1;
-	var length_alpha = 0;
-	partition = new Array({x: x, y: y});
-	partition_middle = new Array();
-	var s0 = {};
-	s0.x = step;
-	s0.y = 0;
-	var s1  = {};
-	s1.x = -step / Math.pow(2, 0.5);
-	s1.y = -step / Math.pow(2, 0.5);
-	var l = {};
-	l.x0 = x;
-	l.y0 = y;
-	while(i <= n0)
-	{
-		x0 = x;
-		y0 = y;
-		x += s0.x;
-		y += s0.y;
-		partition.push({x: x, y: y});
-		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, normal: [0, -1]});
-		i++;
-	}
-	l.x = x;
-	l.y = y;
-	length_alpha = length_line(l.x0, l.y0, l.x,  l.y);
-
-	l.x0 = x;
-	l.y0 = y;
-	while(j <= n1)
-	{
-		x0 = x;
-		y0 = y;
-		x += s1.x; 
-		y += s1.y;
-		partition.push({x: x, y: y});
-		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, normal: [-1 / Math.pow(2,0.5), 1 / Math.pow(2, 0.5)]});
-		j++;
-	}
-	l.x = x;
-	l.y= y;
-	length_alpha += length_alpha = length_line(l.x0, l.y0, l.x,  l.y);;
-	l.x0 = x;
-	l.y0 = y;
-	while(k <= n2)
-	{
-		x0 = x;
-		y0 = y;
-		x += s0.x;
-		y += s0.y;
-		partition.push({x: x, y: y});
-		partition_middle.push({x: (x0+x)/2, y: (y0+y)/2, normal: [0, -1]});
-		k++;  
-	}
-	l.x = x;
-	l.y= y;
-	length_alpha += length_line(l.x0, l.y0, l.x,  l.y);
-	// console.log(length_alpha);
-	delta = (length_alpha)/(n0+n1+n2);
-	// console.log(i, j, k);
+	return Math.floor((max - value) / (max - min) * 256);
 }
 
-function create_T(x, y, n0, n1, step) {
-	partition = [{x : x, y: y}];
-	partition_middle = [];
-	for(var i = 0; i < n0; ++i) {
+function create_segment(x, y, n, step, alpha) {
+	var partition = [];
+	var partition_middle = [];
+	var last = {x : x, y: y};
+	partition.push(last);
+	var s = {
+		x : step * Math.cos(alpha),
+		y : step * Math.sin(alpha)
+	};
+	var normal = {
+		x : Math.cos(alpha + Math.PI * 0.25),
+		y : Math.sin(alpha + Math.PI * 0.25)
+	};
+	console.log(alpha);
+	console.log(normal);
+	for(var i = 0; i < n; ++i) {
 		partition_middle.push({
-			x: partition[i].x + step / 2,
-			y: partition[i].y,
-			normal: [0, 1]
+			x : last.x + s.x / 2,
+			y : last.y + s.y / 2,
+			normal : normal
 		});
-		partition.push({
-			x: partition[i].x + step,
-			y: partition[i].y
-		});
+		last = {
+			x : last.x + s.x,
+			y : last.y + s.y
+		};
+		partition.push(last);
 	}
-	partition_middle.push({
-		x: x + n0 * step * 0.75,
-		y: y,
-		normal: [0, -1]
-	});
-	partition.push({
-		x: x + n0 * step * 0.5,
-		y: y
-	})
-	for(var i = n0 + 1; i < n0 + n1 + 1; ++i) {
-		partition_middle.push({
-			x: partition[i].x,
-			y: partition[i].y - step / 2,
-			normal: [1, 0]
-		});
-		partition.push({
-			x: partition[i].x,
-			y: partition[i].y - step
-		});
+	return {
+		partition: partition,
+		partition_middle: partition_middle,
+		step: step,
+		alpha: alpha
 	}
-	delta = step;
 }
 
 function draw_axis(context, baseX, baseY, size, ratio){
@@ -225,27 +131,27 @@ function draw_axis(context, baseX, baseY, size, ratio){
 	context.closePath();
 }
 
-function draw_letter(context) {
+function draw_letter(context, segment) {
 	//малюємо улюблену букву мого прізвища:)
 	
 	//задаємо колір для цієї красоти
 	context.beginPath()
 	context.strokeStyle = '#f00';
 	context.lineWidth = 5;
-	context.moveTo(partition[0].x * ratio, partition[0].y * ratio);
-	for(var i = 1; i < partition.length; ++i) {
-		context.lineTo(partition[i].x * ratio, partition[i].y * ratio);
+	context.moveTo(segment.partition[0].x * ratio, segment.partition[0].y * ratio);
+	for(var i = 1; i < segment.partition.length; ++i) {
+		context.lineTo(segment.partition[i].x * ratio, segment.partition[i].y * ratio);
 	}
 	context.stroke();
 	context.closePath();
 	
 }
 
-function calc_speed(gamma, big_part) {
+function calc_speed(segment, gamma, big_part, alpha) {
 	var result = [], v;
 	for(var i = 0; i<big_part.length; i++)
 	{
-		v = calc_v(big_part[i].x, big_part[i].y, gamma, partition, alpha, delta);
+		v = calc_v(big_part[i].x, big_part[i].y, gamma, segment.partition, alpha, segment.step);
 		result.push(v);
 	}
 	return result;
@@ -276,15 +182,11 @@ function draw_phi(context, gamma, big_part) {
 	}
 	phi_max = Math.max.apply(Math, arr_phi);
 	phi_min = Math.min.apply(Math, arr_phi);
-	diff_lim = (phi_max - phi_min)/255;
 	for(var i = 0; i<big_part.length; i++)
 	{
-		var color = get_color_by_value(arr_phi[i], diff_lim, phi_min);
-		if (arr_phi[i])
-		{
-			context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-			context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-		}
+		var color = get_color_by_value(arr_phi[i], phi_min, phi_max);
+		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
+		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
 	}
 }
 
@@ -296,15 +198,11 @@ function draw_psi(context, gamma, big_part) {
 	}
 	psi_max = Math.max.apply(Math, arr_psi);
 	psi_min = Math.min.apply(Math, arr_psi);
-	diff_lim = (psi_max - psi_min)/255;
 	for(var i = 0; i<big_part.length; i++)
 	{
-		var color = get_color_by_value(arr_psi[i], diff_lim, psi_min);
-		if (arr_psi[i])
-		{
-			context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-			context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-		}
+		var color = get_color_by_value(arr_psi[i], psi_min, psi_max);
+		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
+		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
 	}
 }
 
@@ -318,15 +216,11 @@ function draw_speed_field(context, speed, big_part) {
 	}
 	speed_max = Math.max.apply(Math, speed_abs);
 	speed_min = Math.min.apply(Math, speed_abs);
-	diff_lim = (speed_max - speed_min)/255;
 	for(var i = 0; i<big_part.length; i++)
 	{
-		var color = get_color_by_value(speed_abs[i], diff_lim, speed_min);
-		if (speed_abs[i])
-		{
-			context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-			context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-		}
+		var color = get_color_by_value(speed_abs[i], speed_min, speed_max);
+		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
+		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
 	}
 }
 
@@ -339,15 +233,11 @@ function draw_pressure(context, speed, big_part, alpha) {
 	}
 	pressure_max = Math.max.apply(Math, pressure);
 	pressure_min = Math.min.apply(Math, pressure);
-	diff_lim = (pressure_max - pressure_min)/255;
 	for(var i = 0; i<big_part.length; i++)
 	{
-		var color = get_color_by_value(pressure[i], diff_lim, pressure_min);
-		if (pressure[i])
-		{
-			context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-			context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-		}
+		var color = get_color_by_value(pressure[i], pressure_min, pressure_max);
+		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
+		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
 	}
 }
 
@@ -361,21 +251,26 @@ jQuery(document).ready(function(){
     baseY = size.h/2;
     baseX = size.w/2;
     ratio = 450;
-	// create_partitions(0, 300,  2, 4, 2, 30);
-	// create_partitions(0, 0.5,  10, 15, 10, 0.07);
-	create_T(-0.5, 0.5, 20, 15, 0.05);
-
 	var context = first_canvas.getContext('2d');
  	context.transform(1, 0, 0, -1, baseX, baseY);
 
-	var gamma = solve_solution(partition, partition_middle, alpha, gamma0, delta);
+	// create_partitions(0, 300,  2, 4, 2, 30);
+	// create_partitions(0, 0.5,  10, 15, 10, 0.07);
+	// create_T(-0.5, 0.5, 20, 15, 0.05);
+	var segment = create_segment(0, 0.5, 15, 0.07, Math.PI * 6 / 4);
+	var gamma0 = 1;
+	var alpha = 0;
+
+
+	var gamma = find_gamma(segment, alpha, gamma0);
 	var big_part = big_partition(size.w / ratio, size.h / ratio, 20 / ratio);
-	var speed = calc_speed(gamma, big_part);
+	var small_part = big_partition(size.w / ratio, size.h / ratio, 15 / ratio);
+	var speed = calc_speed(segment, gamma, big_part, alpha);
 
  	draw_all = function() {
 		draw_speed(context, speed, big_part);
 	 	draw_axis(context, baseX, baseY, size, ratio);
-	 	draw_letter(context);
+	 	draw_letter(context, segment);
 	}
 	window.drawer = {
 		psi: function() {
