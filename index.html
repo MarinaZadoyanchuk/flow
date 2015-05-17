@@ -1,10 +1,11 @@
-<html>
+<html ng-app="flow">
 <head>
 	<title></title>
 	<meta charset = "utf8">
-	<script src="jquery-1.11.1.min.js"></script>
+    <script src="/node_modules/angular/angular.min.js"></script>
 	<script type="text/javascript" src = "classMatrix.js"></script>
-	<script type="text/javascript" src = "canvas.js"></script>
+    <script type="text/javascript" src = "canvas.js"></script>
+	<script type="text/javascript" src = "index.js"></script>
     <style>
         .menu {
             display: inline-block;
@@ -15,7 +16,7 @@
         }
     </style>
 </head>
-<body>
+<body ng-controller="Main">
 	<canvas id = "first_canvas" width = "1200px" height = "1000px">
 		
 	</canvas>

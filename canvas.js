@@ -1,77 +1,103 @@
-function include(url) {
-        var script = document.createElement('script');
-        script.src = url;
-        document.getElementsByTagName('head')[0].appendChild(script);
-    }
-include("classMatrix.js");
 
 var normal_constant = Math.PI / 2;
+var ratio = 450;
 
-function draw_axis(context, baseX, baseY, size, ratio){
- 	context.beginPath();
+function Canvas(canvasId) {
+
+    this.canvas = document.getElementById(canvasId);
+    this.size = {};
+    this.size.lIndent = 10;
+    this.size.rIndent = 10;
+    this.size.w = this.canvas.width;
+    this.size.h = this.canvas.height;
+    this.baseY = this.size.h/2;
+    this.baseX = this.size.w/2;
+    this.ratio = 450;
+
+    this.context = this.canvas.getContext('2d');
+    this.context.transform(1, 0, 0, -1, this.baseX, this.baseY);
+
+    this.width = function() {
+    	return this.size.w / this.ratio;
+    }
+
+    this.height = function() {
+    	return this.size.h / this.ratio;
+    }
+}
+
+Canvas.prototype.clear = function() {
+    this.context.clearRect(-this.baseX, -this.baseY, this.size.w, this.size.h);
+}
+
+Canvas.prototype.draw_axis = function(){
+    baseY = this.size.h/2;
+    baseX = this.size.w/2;
+
+ 	this.context.beginPath();
  	//малюємо вісь Y
- 	context.moveTo(0, baseY - size.rIndent);
- 	context.lineTo(0, - baseY + size.rIndent);
+ 	this.context.moveTo(0, baseY - this.size.rIndent);
+ 	this.context.lineTo(0, - baseY + this.size.rIndent);
  	//малюємо стрілку до вісі Y
- 	context.moveTo(0, baseY - size.rIndent);
- 	context.lineTo(0 - size.rIndent / 2, baseY - 2.5 * size.rIndent);
- 	context.moveTo(0, baseY - size.rIndent);
- 	context.lineTo(0 + size.rIndent / 2, baseY - 2.5 * size.rIndent);
+ 	this.context.moveTo(0, baseY - this.size.rIndent);
+ 	this.context.lineTo(0 - this.size.rIndent / 2, baseY - 2.5 * this.size.rIndent);
+ 	this.context.moveTo(0, baseY - this.size.rIndent);
+ 	this.context.lineTo(0 + this.size.rIndent / 2, baseY - 2.5 * this.size.rIndent);
  	//малюємо вісь X
- 	context.moveTo(-baseX + size.lIndent, 0);
- 	context.lineTo(baseX - size.lIndent, 0);
+ 	this.context.moveTo(-baseX + this.size.lIndent, 0);
+ 	this.context.lineTo(baseX - this.size.lIndent, 0);
 
  	//малюємо стрілку для вісі X
- 	context.moveTo(baseX - size.lIndent, 0);
- 	context.lineTo(baseX - 2.5*size.lIndent, 0 - size.lIndent/2);
-	context.moveTo(baseX - size.lIndent, 0);
-	context.lineTo(baseX - 2.5*size.lIndent, 0 + size.lIndent/2);
+ 	this.context.moveTo(baseX - this.size.lIndent, 0);
+ 	this.context.lineTo(baseX - 2.5*this.size.lIndent, 0 - this.size.lIndent/2);
+	this.context.moveTo(baseX - this.size.lIndent, 0);
+	this.context.lineTo(baseX - 2.5*this.size.lIndent, 0 + this.size.lIndent/2);
 
 	//добавляємо позначки на вісі
-	count_markerX = ~~((size.w/2)/ratio);
-	count_markerY = ~~((size.h/2)/ratio);
-	smallMarker = ratio/10;
+	count_markerX = ~~((this.size.w/2)/this.ratio);
+	count_markerY = ~~((this.size.h/2)/this.ratio);
+	smallMarker = this.ratio/10;
 
 	for(var i = 0; i < count_markerX; i++)
 	{
-		moveToR = ratio * i;
-		moveToL = -ratio * i;
-		context.moveTo(moveToR, - size.rIndent);
-		context.lineTo(moveToR, + size.rIndent);
-		context.moveTo(moveToL, - size.rIndent);
-		context.lineTo(moveToL, + size.rIndent);
+		moveToR = this.ratio * i;
+		moveToL = -this.ratio * i;
+		this.context.moveTo(moveToR, - this.size.rIndent);
+		this.context.lineTo(moveToR, + this.size.rIndent);
+		this.context.moveTo(moveToL, - this.size.rIndent);
+		this.context.lineTo(moveToL, + this.size.rIndent);
 		for(var k = 1; k < 10; k++)
 		{
-			context.moveTo(moveToR + k*smallMarker, - size.rIndent/2);
-			context.lineTo(moveToR + k*smallMarker, + size.rIndent/2);
-			context.moveTo(moveToL - k*smallMarker , - size.rIndent/2);
-			context.lineTo(moveToL - k*smallMarker, + size.rIndent/2);
+			this.context.moveTo(moveToR + k*smallMarker, - this.size.rIndent/2);
+			this.context.lineTo(moveToR + k*smallMarker, + this.size.rIndent/2);
+			this.context.moveTo(moveToL - k*smallMarker , - this.size.rIndent/2);
+			this.context.lineTo(moveToL - k*smallMarker, + this.size.rIndent/2);
 		}
-		context.stroke();
+		this.context.stroke();
 	}
 	for(var j = 0; j <= count_markerY; j++)
 	{
-		moveToU = - ratio*j;
-		moveToD = + ratio*j;
+		moveToU = - this.ratio*j;
+		moveToD = + this.ratio*j;
 
-		context.moveTo(- size.lIndent, moveToU);
-		context.lineTo(+ size.lIndent, moveToU);
+		this.context.moveTo(- this.size.lIndent, moveToU);
+		this.context.lineTo(+ this.size.lIndent, moveToU);
 
-		context.moveTo(- size.lIndent, moveToD);
-		context.lineTo(+ size.lIndent, moveToD);
+		this.context.moveTo(- this.size.lIndent, moveToD);
+		this.context.lineTo(+ this.size.lIndent, moveToD);
 
 
 		for(var k = 1; k < 10; k++)
 		{
-			context.moveTo(- size.lIndent/2, moveToU - k*smallMarker);
-			context.lineTo(+ size.lIndent/2, moveToU - k*smallMarker);
-			context.moveTo(- size.lIndent/2, moveToD + k*smallMarker);
-			context.lineTo(+ size.lIndent/2, moveToD + k*smallMarker);
+			this.context.moveTo(- this.size.lIndent/2, moveToU - k*smallMarker);
+			this.context.lineTo(+ this.size.lIndent/2, moveToU - k*smallMarker);
+			this.context.moveTo(- this.size.lIndent/2, moveToD + k*smallMarker);
+			this.context.lineTo(+ this.size.lIndent/2, moveToD + k*smallMarker);
 		}
 
-		context.stroke();
+		this.context.stroke();
 	}
-	context.closePath();
+	this.context.closePath();
 }
 
 function big_partition(w,h, step)
@@ -262,83 +288,3 @@ function draw_pressure(context, speed, big_part, alpha) {
 	}
 }
 
-jQuery(document).ready(function(){
-	first_canvas = document.getElementById("first_canvas");
-	var size = {};
-    size.lIndent = 10;
-    size.rIndent = 10;
-    size.w = first_canvas.width;
-    size.h = first_canvas.height;
-    baseY = size.h/2;
-    baseX = size.w/2;
-    ratio = 450;
-	var context = first_canvas.getContext('2d');
- 	context.transform(1, 0, 0, -1, baseX, baseY);
-
-	// create_partitions(0, 300,  2, 4, 2, 30);
-	// create_partitions(0, 0.5,  10, 15, 10, 0.07);
-	// create_T(-0.5, 0.5, 20, 15, 0.05);
-	var base = {
-		partition_middle: [],
-		partition: [{x: 0, y: 0.5}],
-		step: 0.07,
-		add_segment: add_segment
-	};
-	var z = base
-	.add_segment(10, 0)
-	.add_segment(15, Math.PI * 5 / 4)
-	.add_segment(10, 0)
-	;
-	base = {
-		partition_middle: [],
-		partition: [{x: -0.5, y: 0.5}],
-		step: 0.05,
-		add_segment: add_segment
-	}
-	var t = base
-	.add_segment(5, Math.PI / 2)
-	.add_segment(20, 0)
-	.add_segment(5, -Math.PI / 2)
-	.add_segment(20, -Math.PI / 2, 0, 0.8)
-	;
-	var segment = t;
-
-	var gamma0 = 1;
-	var alpha = 0;
-
-
-	var gamma = find_gamma(segment, alpha, gamma0);
-	var big_part = big_partition(size.w / ratio, size.h / ratio, 20 / ratio);
-	var small_part = big_partition(size.w / ratio, size.h / ratio, 15 / ratio);
-	var speed = calc_speed(segment, gamma, big_part, alpha);
-
- 	draw_all = function() {
-		draw_speed(context, speed, big_part);
-	 	draw_axis(context, baseX, baseY, size, ratio);
-	 	draw_letter(context, segment);
-	}
-	window.drawer = {
-		psi: function() {
-		 	draw_psi(context, gamma, big_part, segment, alpha);
-		 	draw_all();
-		},
-		phi: function() {
-		 	draw_phi(context, gamma, big_part, segment, alpha);
-		 	draw_all();
-		},
-		speed: function() {
-		 	draw_speed_field(context, speed, big_part);
-		 	draw_all();
-		},
-		pressure: function() {
-		 	draw_pressure(context, speed, big_part, alpha);
-		 	draw_all();
-		},
-		none : function() {
-			context.clearRect(-baseX, -baseY, size.w, size.h);
-			draw_all();
-		}
-	}
-	draw_all();
-
-}) 
