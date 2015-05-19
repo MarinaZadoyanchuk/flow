@@ -42,7 +42,19 @@ Canvas.prototype.drawLine = function(points) {
 	this.context.closePath();
 }
 
+Canvas.prototype.drawLetter = function(letter) {
+  this.style('#f00', 5);
+  if (letter.breakpoint) {
+    this.drawLine(letter.partition.slice(0, letter.breakpoint));
+    this.drawLine(letter.partition.slice(letter.breakpoint, letter.partition.length));
+  } else {
+    this.drawLine(letter.partition);
+  }
+}
+
 Canvas.prototype.drawLines = function(lines) {
+  this.style('#000', 1);
+
 	this.context.beginPath()
 	for(var i = 0; i < lines.length; ++i) {
 		this.context.moveTo(lines[i][0].x * this.ratio, lines[i][0].y * this.ratio);
