@@ -1,8 +1,7 @@
-<html ng-app="flow">
+<html>
 <head>
   <title></title>
   <meta charset="utf8">
-  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
   <script type="text/javascript" src="classMatrix.js"></script>
   <script type="text/javascript" src="canvas.js"></script>
   <script type="text/javascript" src="letter.js"></script>
@@ -18,16 +17,19 @@
     }
   </style>
 </head>
-<body ng-controller="Main">
+<body>
   <canvas id="first_canvas" width="1200px" height="1000px">
     
   </canvas>
   <div class="menu">
-    <a class="menu-item" href="javascript:drawer.psi()">psi</a>
-    <a class="menu-item" href="javascript:drawer.phi()">phi</a>
-    <a class="menu-item" href="javascript:drawer.speed()">speed</a>
-    <a class="menu-item" href="javascript:drawer.pressure()">pressure</a>
-    <a class="menu-item" href="javascript:drawer.none()">none</a>
+    <a class="menu-item" href="javascript:controller.setField('psi')">psi</a>
+    <a class="menu-item" href="javascript:controller.setField('phi')">phi</a>
+    <a class="menu-item" href="javascript:controller.setField('speed')">speed</a>
+    <a class="menu-item" href="javascript:controller.setField('pressure')">pressure</a>
+    <a class="menu-item" href="javascript:controller.setField()">none</a>
   </div>
+  <script>
+    window.controller = new MainController();
+  </script>
 </body>
 </html>

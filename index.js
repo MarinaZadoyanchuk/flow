@@ -1,10 +1,25 @@
 
-var flowApp = angular.module('flow', []);
+function createPartition(w,h, step)
+{
+  var partition = new Array();
+  var i = -w / 2;
+  var j = -h / 2;
+
+  while(i < w / 2)
+  {
+    j = -h / 2;
+    while(j < h / 2)
+    {
+      partition.push({x: i, y:j});
+      j = j+step;
+    }
+    i = i+step;
+  }
+  return partition;
+}
 
 
-flowApp.controller('Main', ['$scope', MainController]);
-
-function MainController(scope) {
+function MainController() {
 
     var canvas = (new Canvas("first_canvas"));
 
@@ -21,43 +36,37 @@ function MainController(scope) {
     .addSegment(20, -Math.PI / 2, 0, 0.8)
     .getLetter();
     
-    var segment = t;
+    var letter = t;
+    var partition = createPartition(canvas.width(), canvas.height(), 20 / canvas.ratio);
 
-    var gamma0 = 1;
-    var alpha = 0;
+    var worker = new Worker(letter, partition);
+    var speedLines = worker.getSpeedLines()
+    var field;
 
-
-    var gamma = find_gamma(segment, alpha, gamma0);
-    var big_part = big_partition(canvas.width(), canvas.height(), 20 / canvas.ratio);
-    var speed = calc_speed(segment, gamma, big_part, alpha);
-
-    drawAll = function() {
-        canvas.drawLines(getSpeedLines(speed, big_part));
-        canvas.drawAxis();
-        canvas.drawLetter(segment);
-    }
-    window.drawer = {
-        psi: function() {
-            canvas.drawField(big_part, getPsiField(gamma, big_part, segment, alpha));
-            drawAll();
-        },
-        phi: function() {
-            canvas.drawField(big_part, getPhiField(gamma, big_part, segment, alpha));
-            drawAll();
-        },
-        speed: function() {
-            canvas.drawField(big_part, getSpeedField(speed, big_part));
-            drawAll();
-        },
-        pressure: function() {
-            canvas.drawField(big_part, getPressureField(speed, big_part, alpha));
-            drawAll();
-        },
-        none : function() {
-            canvas.clear();
-            drawAll();
+    var redraw = function() {
+        canvas.clear()
+        if (field) {
+            canvas.drawField(partition, field);
         }
+        if (speedLines) {
+            canvas.drawLines(speedLines);
+        }
+        canvas.drawLines(worker.getSpeedLines());
+        canvas.drawAxis();
+        canvas.drawLetter(letter);
     }
-    drawAll();
 
+    this.setField = function(fieldName) {
+        if (fieldName) {
+            var fieldGetter = worker['get' + fieldName[0].toUpperCase() + fieldName.slice(1) + 'Field'];
+        }
+        if (fieldGetter) {
+            field = fieldGetter.call(worker);
+        } else {
+            field = null;
+        }
+        redraw();
+    }
+    
+    redraw();
 }
