@@ -1,31 +1,31 @@
 <html ng-app="flow">
 <head>
-	<title></title>
-	<meta charset = "utf8">
-    <script src="/node_modules/angular/angular.min.js"></script>
-	<script type="text/javascript" src = "classMatrix.js"></script>
-    <script type="text/javascript" src = "canvas.js"></script>
-	<script type="text/javascript" src = "index.js"></script>
-    <style>
-        .menu {
-            display: inline-block;
-            vertical-align: top;
-        }
-        .menu-item {
-            display: block;
-        }
-    </style>
+  <title></title>
+  <meta charset="utf8">
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+  <script type="text/javascript" src="classMatrix.js"></script>
+  <script type="text/javascript" src="canvas.js"></script>
+  <script type="text/javascript" src="index.js"></script>
+  <style>
+    .menu {
+      display: inline-block;
+      vertical-align: top;
+    }
+    .menu-item {
+      display: block;
+    }
+  </style>
 </head>
 <body ng-controller="Main">
-	<canvas id = "first_canvas" width = "1200px" height = "1000px">
-		
-	</canvas>
-    <div class="menu">
-        <a class="menu-item" href="javascript:drawer.psi()">psi</a>
-        <a class="menu-item" href="javascript:drawer.phi()">phi</a>
-        <a class="menu-item" href="javascript:drawer.speed()">speed</a>
-        <a class="menu-item" href="javascript:drawer.pressure()">pressure</a>
-        <a class="menu-item" href="javascript:drawer.none()">none</a>
-    </div>
+  <canvas id="first_canvas" width="1200px" height="1000px">
+    
+  </canvas>
+  <div class="menu">
+    <a class="menu-item" href="javascript:drawer.psi()">psi</a>
+    <a class="menu-item" href="javascript:drawer.phi()">phi</a>
+    <a class="menu-item" href="javascript:drawer.speed()">speed</a>
+    <a class="menu-item" href="javascript:drawer.pressure()">pressure</a>
+    <a class="menu-item" href="javascript:drawer.none()">none</a>
+  </div>
 </body>
 </html>

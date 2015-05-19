@@ -1,6 +1,5 @@
 
 var normal_constant = Math.PI / 2;
-var ratio = 450;
 
 function Canvas(canvasId) {
 
@@ -30,7 +29,48 @@ Canvas.prototype.clear = function() {
     this.context.clearRect(-this.baseX, -this.baseY, this.size.w, this.size.h);
 }
 
-Canvas.prototype.draw_axis = function(){
+Canvas.prototype.style = function(strokeStyle, lineWidth) {
+	this.context.strokeStyle = strokeStyle;
+	this.context.lineWidth = lineWidth;
+}
+
+Canvas.prototype.drawLine = function(points) {
+	this.context.beginPath()
+	this.context.moveTo(points[0].x * this.ratio, points[0].y * this.ratio);
+	for(var i = 1; i < points.length; ++i) {
+		this.context.lineTo(points[i].x * this.ratio, points[i].y * this.ratio);
+	}
+	this.context.stroke();
+	this.context.closePath();
+}
+
+Canvas.prototype.drawLines = function(lines) {
+	this.context.beginPath()
+	for(var i = 0; i < lines.length; ++i) {
+		this.context.moveTo(lines[i][0].x * this.ratio, lines[i][0].y * this.ratio);
+		this.context.lineTo(lines[i][1].x * this.ratio, lines[i][1].y * this.ratio);
+	}
+	this.context.stroke();
+	this.context.closePath();
+}
+
+Canvas.prototype.drawField = function(partition, field) {
+	function get_color_by_value(value, min, max)
+	{
+		return Math.floor((max - value) / (max - min) * 256);
+	}
+
+	max_value = Math.max.apply(Math, field);
+	min_value = Math.min.apply(Math, field);
+	for(var i = 0; i < partition.length; i++)
+	{
+		var color = get_color_by_value(field[i], min_value, max_value);
+		this.context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
+		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, 20, 20);
+	}
+}
+
+Canvas.prototype.drawAxis = function(){
     baseY = this.size.h/2;
     baseX = this.size.w/2;
 
@@ -119,11 +159,6 @@ function big_partition(w,h, step)
 	return big_partition;
 }
 
-function get_color_by_value(value, min, max)
-{
-	return Math.floor((max - value) / (max - min) * 256);
-}
-
 function add_segment(n, alpha, x, y) {
 	if (!(x && y) && !(x === 0)){
 		var last = this.partition[this.partition.length - 1];
@@ -154,24 +189,14 @@ function add_segment(n, alpha, x, y) {
 	return this;
 }
 
-function draw_letter(context, segment) {
-	//малюємо улюблену букву мого прізвища:)
-	
-	//задаємо колір для цієї красоти
-	context.beginPath()
-	context.strokeStyle = '#f00';
-	context.lineWidth = 5;
-	context.moveTo(segment.partition[0].x * ratio, segment.partition[0].y * ratio);
-	for(var i = 1; i < segment.partition.length; ++i) {
-		if (segment.breakpoint && i === segment.breakpoint) {
-			context.moveTo(segment.partition[i].x * ratio, segment.partition[i].y * ratio);
-		} else {
-			context.lineTo(segment.partition[i].x * ratio, segment.partition[i].y * ratio);
-		}
+function drawLetter(canvas, segment) {
+	canvas.style('#f00', 5);
+	if (segment.breakpoint) {
+		canvas.drawLine(segment.partition.slice(0, segment.breakpoint));
+		canvas.drawLine(segment.partition.slice(segment.breakpoint, segment.partition.length));
+	} else {
+		canvas.drawLine(segment.partition);
 	}
-	context.stroke();
-	context.closePath();
-	
 }
 
 function calc_speed(segment, gamma, big_part, alpha) {
@@ -184,107 +209,62 @@ function calc_speed(segment, gamma, big_part, alpha) {
 	return result;
 }
 
-function draw_speed(context, speed, big_part) {
+function drawSpeed(canvas, speed, big_part) {
 
-	context.strokeStyle = '#000';
-	context.lineWidth = 1;
-	context.beginPath();
+	canvas.style('#000', 1);
 
-	for(var i = 0; i<speed.length; i++)
-	{
-		var v = speed[i];
-		context.moveTo(big_part[i].x * ratio, big_part[i].y * ratio);
-		v = v.mult_by_scalar(0.03)
-		context.lineTo((big_part[i].x + v.v[0]) * ratio, (big_part[i].y + v.v[1]) * ratio);
-	}
-	context.stroke();
-	context.closePath();
+	canvas.drawLines(speed.map(function(v, i) {
+		v = v.mult_by_scalar(0.03);
+		return [big_part[i], {x: big_part[i].x + v.v[0], y: big_part[i].y + v.v[1]}];
+	}));
 }
 
-function draw_phi(context, gamma, big_part, segment, alpha) {
-	arr_phi = new Array();
-	for(var i = 0; i<big_part.length; i++)
-	{
-		arr_phi.push(
-			calc_phi(
-				big_part[i].x, 
-				big_part[i].y,
-				gamma, 
-				segment.partition,
-				segment.partition_middle,
-				alpha,
-				segment.step
-				)
-			);
-	}
-	phi_max = Math.max.apply(Math, arr_phi);
-	phi_min = Math.min.apply(Math, arr_phi);
-	for(var i = 0; i<big_part.length; i++)
-	{
-		var color = get_color_by_value(arr_phi[i], phi_min, phi_max);
-		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-	}
+function drawPhi(canvas, gamma, big_part, segment, alpha) {
+	arr_phi = big_part.map(function(point) {
+		return calc_phi(
+			point.x, 
+			point.y,
+			gamma, 
+			segment.partition,
+			segment.partition_middle,
+			alpha,
+			segment.step
+		);
+	});
+	canvas.drawField(big_part, arr_phi);
 }
 
-function draw_psi(context, gamma, big_part, segment, alpha) {
-	arr_psi = new Array();
-	for(var i = 0; i<big_part.length; i++)
-	{
-		arr_psi.push(
-			calc_psi(
-				big_part[i].x,
-				big_part[i].y,
-				gamma,
-				segment.partition,
-				segment.partition_middle,
-				alpha,
-				segment.step
-				)
-			);
-	}
-	psi_max = Math.max.apply(Math, arr_psi);
-	psi_min = Math.min.apply(Math, arr_psi);
-	for(var i = 0; i<big_part.length; i++)
-	{
-		var color = get_color_by_value(arr_psi[i], psi_min, psi_max);
-		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-	}
+function drawPsi(canvas, gamma, big_part, segment, alpha) {
+	arr_psi = big_part.map(function(point) {
+		return calc_psi(
+			point.x,
+			point.y,
+			gamma,
+			segment.partition,
+			segment.partition_middle,
+			alpha,
+			segment.step
+		);
+	});
+	canvas.drawField(big_part, arr_psi);
 }
 
-function draw_speed_field(context, speed, big_part) {
-	var speed_abs = [];
-	for(var i = 0; i < speed.length; ++i) {
-		speed_abs.push(Math.sqrt(
-			speed[i].v[0] * speed[i].v[0],
-			speed[i].v[1] * speed[i].v[1]
-			));
-	}
-	speed_max = Math.max.apply(Math, speed_abs);
-	speed_min = Math.min.apply(Math, speed_abs);
-	for(var i = 0; i<big_part.length; i++)
-	{
-		var color = get_color_by_value(speed_abs[i], speed_min, speed_max);
-		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-	}
+function drawSpeedField(canvas, speed, big_part) {
+	var speed_abs = speed.map(function(pointSpeed){
+		return Math.sqrt(
+			pointSpeed.v[0] * pointSpeed.v[0],
+			pointSpeed.v[1] * pointSpeed.v[1]
+		);
+	});
+	canvas.drawField(big_part, speed_abs);
 }
 
-function draw_pressure(context, speed, big_part, alpha) {
+function drawPressure(canvas, speed, big_part, alpha) {
 	var v = [Math.cos(alpha), Math.sin(alpha)];
-	var pressure = [];
-	for(var i = 0; i < speed.length; ++i) {
-		pressure.push(1 - (speed[i].v[0] * speed[i].v[0] + speed[i].v[1] * speed[i].v[1]) /
+	var pressure = speed.map(function(point_speed) {
+		return (1 - (point_speed.v[0] * point_speed.v[0] + point_speed.v[1] * point_speed.v[1]) /
 			(v[0] * v[0] + v[1] * v[1]) );
-	}
-	pressure_max = Math.max.apply(Math, pressure);
-	pressure_min = Math.min.apply(Math, pressure);
-	for(var i = 0; i<big_part.length; i++)
-	{
-		var color = get_color_by_value(pressure[i], pressure_min, pressure_max);
-		context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-		context.fillRect(big_part[i].x * ratio, big_part[i].y * ratio, 20, 20);
-	}
+	})
+	canvas.drawField(big_part, pressure);
 }
 

@@ -42,33 +42,33 @@ function MainController(scope) {
     var small_part = big_partition(canvas.width(), canvas.height(), 15 / canvas.ratio);
     var speed = calc_speed(segment, gamma, big_part, alpha);
 
-    draw_all = function() {
-        draw_speed(canvas.context, speed, big_part);
-        canvas.draw_axis();
-        draw_letter(canvas.context, segment);
+    drawAll = function() {
+        drawSpeed(canvas, speed, big_part);
+        canvas.drawAxis();
+        drawLetter(canvas, segment);
     }
     window.drawer = {
         psi: function() {
-            draw_psi(canvas.context, gamma, big_part, segment, alpha);
-            draw_all();
+            drawPsi(canvas, gamma, big_part, segment, alpha);
+            drawAll();
         },
         phi: function() {
-            draw_phi(canvas.context, gamma, big_part, segment, alpha);
-            draw_all();
+            drawPhi(canvas, gamma, big_part, segment, alpha);
+            drawAll();
         },
         speed: function() {
-            draw_speed_field(canvas.context, speed, big_part);
-            draw_all();
+            drawSpeedField(canvas, speed, big_part);
+            drawAll();
         },
         pressure: function() {
-            draw_pressure(canvas.context, speed, big_part, alpha);
-            draw_all();
+            drawPressure(canvas, speed, big_part, alpha);
+            drawAll();
         },
         none : function() {
             canvas.clear();
-            draw_all();
+            drawAll();
         }
     }
-    draw_all();
+    drawAll();
 
 }
