@@ -24,56 +24,42 @@ Worker.prototype.findVj = function(p, discrete_p, delta)
 
 Worker.prototype.findGamma = function()
 {
-  var system = [];
-  var current_equation;
-  var i, j;
-  var v_inf = new Vector(2);
-  var vj = new Vector(2);
-  var normal = new Vector(2);
-  v_inf.v = [Math.sin(this.alpha), Math.cos(this.alpha)];
-  for(i = 0; i < this.letter.partition_middle.length; ++i) {
-    normal.v = [this.letter.partition_middle[i].normal.x, this.letter.partition_middle[i].normal.y];
-    current_equation = []
-    for(j = 0; j < this.letter.partition.length; ++j) {
-      vj.v = this.findVj(this.letter.partition_middle[i], this.letter.partition[j], this.letter.step);
-      current_equation.push(vj.scalar(normal));
-    }
-    current_equation.push(-v_inf.scalar(normal))
-    system.push(current_equation);
-  }
-  current_equation = [];
-  for(j = 0; j < this.letter.partition.length; ++j) {
-    current_equation.push(1);
-  }
-  current_equation.push(this.gamma0);
-  system.push(current_equation);
+  var free_terms = [];
+  var worker = this;
+  var v_inf = [Math.sin(this.alpha), Math.cos(this.alpha)];
 
+  var system = this.letter.partition_middle.map(function(middle_point) {
 
-  var m = new Matrix({m: this.letter.partition.length + 1, n: this.letter.partition_middle.length + 1});
-  m.a = system;
-  result = Gaus_method(m);
+    var normal = [middle_point.normal.x, middle_point.normal.y];
 
-  return result;
+    var current_equation = worker.letter.partition.map(function(edge_point) {
+      var vj = worker.findVj(middle_point, edge_point, worker.letter.step);
+      return math.multiply(vj, normal);
+    })
+
+    free_terms.push(-math.multiply(v_inf, normal));
+    return current_equation;
+  })
+
+  system.push(math.ones(this.letter.partition.length).toArray());
+  free_terms.push(this.gamma0);
+
+  return math.inv(math.matrix(system)).multiply(free_terms).toArray();
 }
 
 Worker.prototype.findSpeed = function(point)
 {
-  // if (x > 0 && y > 300)
-  // debugger
-  var v = new Vector(2);
-  v.v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  var M = this.gamma.v.length;
-  var result_vector = new Vector(2);
-  var vj = new Vector(2);
-  // var sum_gamma = 0;
-  for(var i = 0; i<M; i++)
+
+  var v_inf = [Math.cos(this.alpha), Math.sin(this.alpha)];
+  var result_vector = math.zeros(2);
+
+  for(var i = 0; i < this.letter.partition.length; i++)
   {
-    vj.v = this.findVj(point, this.letter.partition[i], this.letter.step);
-    result_vector = result_vector.add(vj.mult_by_scalar(this.gamma.v[i]));
-    // sum_gamma += this.gamma.v[i];
+    var vj = this.findVj(point, this.letter.partition[i], this.letter.step);
+    result_vector = math.add(result_vector, math.multiply(vj, this.gamma[i]));
+
   }
-  // console.log(sum_gamma);
-  return v.substr(result_vector);
+  return math.subtract(v_inf, result_vector).toArray();
 }
 
 Worker.prototype.findPhi =function(point)
@@ -82,7 +68,7 @@ Worker.prototype.findPhi =function(point)
   var s1 = 0;
   var s2 = 0;
   var result = 0;
-  var count_gamma = this.gamma.v.length;
+  var count_gamma = this.gamma.length;
   // console.log(count_gamma, this.letter.partition_middle.length);
   var sum_all_gamma = 0;
   var log = 0;
@@ -95,7 +81,7 @@ Worker.prototype.findPhi =function(point)
     sum_gamma = 0;
     for(var k = 0; k<=i; k++)
     {
-      sum_gamma +=this.gamma.v[k];
+      sum_gamma +=this.gamma[k];
     }
     // console.log(i);
     s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].y - this.letter.partition[i].y) 
@@ -105,7 +91,7 @@ Worker.prototype.findPhi =function(point)
   }
   for(var j = 0; j<count_gamma; j++)
   {
-    sum_all_gamma += this.gamma.v[j];
+    sum_all_gamma += this.gamma[j];
   }
   // log = Math.pow(Math.log(Math.pow(x - this.letter.partition[count_gamma-1].x, 2)+Math.pow(y - this.letter.partition[count_gamma-1].y, 2)), 0.5);
   atan = Math.atan2(
@@ -123,7 +109,7 @@ Worker.prototype.findPsi = function(point)
   var s1 = 0;
   var s2 = 0;
   var result = 0;
-  var count_gamma = this.gamma.v.length;
+  var count_gamma = this.gamma.length;
   var sum_all_gamma = 0;
   var log = 0;
   var result = 0;
@@ -135,7 +121,7 @@ Worker.prototype.findPsi = function(point)
     sum_gamma = 0;
     for(var k = 0; k<=i; k++)
     {
-      sum_gamma +=this.gamma.v[k];
+      sum_gamma +=this.gamma[k];
     }
     // console.log(i);
     s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].x - this.letter.partition[i].x) 
@@ -145,7 +131,7 @@ Worker.prototype.findPsi = function(point)
   }
   for(var j = 0; j<count_gamma; j++)
   {
-    sum_all_gamma += this.gamma.v[j];
+    sum_all_gamma += this.gamma[j];
   }
   log = 0.5 * Math.log(
     Math.pow(x - this.letter.partition[this.letter.partition.length - 1].x, 2)
@@ -162,9 +148,8 @@ Worker.prototype.calcSpeed = function() {
 
 Worker.prototype.getSpeedLines = function() {
   return this.speed.map(function(v, i) {
-    v = v.mult_by_scalar(0.03);
-    return [this.partition[i], {x: this.partition[i].x + v.v[0], y: this.partition[i].y + v.v[1]}];
-  }.bind(this));
+    return math.multiply(v, 0.03);
+  });
 }
 
 Worker.prototype.getPhiField = function() {
@@ -177,17 +162,13 @@ Worker.prototype.getPsiField = function() {
 
 Worker.prototype.getSpeedField = function() {
   return this.speed.map(function(pointSpeed){
-    return Math.sqrt(
-      pointSpeed.v[0] * pointSpeed.v[0],
-      pointSpeed.v[1] * pointSpeed.v[1]
-    );
-  }.bind(this));
+    return math.sqrt(math.multiply(pointSpeed, pointSpeed));
+  });
 }
 
 Worker.prototype.getPressureField = function() {
-  var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  return this.speed.map(function(point_speed) {
-    return (1 - (point_speed.v[0] * point_speed.v[0] + point_speed.v[1] * point_speed.v[1]) /
-      (v[0] * v[0] + v[1] * v[1]) );
-  }.bind(this));
+  var v_inf = [Math.cos(this.alpha), Math.sin(this.alpha)];
+  return this.speed.map(function(pointSpeed) {
+    return 1 - math.multiply(pointSpeed, pointSpeed) / math.multiply(v_inf, v_inf);
+  });
 }

@@ -49,9 +49,8 @@ function MainController() {
             canvas.drawField(partition, field);
         }
         if (speedLines) {
-            canvas.drawLines(speedLines);
+            canvas.drawLines(partition, speedLines);
         }
-        canvas.drawLines(worker.getSpeedLines());
         canvas.drawAxis();
         canvas.drawLetter(letter);
     }

@@ -52,13 +52,14 @@ Canvas.prototype.drawLetter = function(letter) {
   }
 }
 
-Canvas.prototype.drawLines = function(lines) {
+Canvas.prototype.drawLines = function(partition, lines) {
   this.style('#000', 1);
 
 	this.context.beginPath()
-	for(var i = 0; i < lines.length; ++i) {
-		this.context.moveTo(lines[i][0].x * this.ratio, lines[i][0].y * this.ratio);
-		this.context.lineTo(lines[i][1].x * this.ratio, lines[i][1].y * this.ratio);
+	for(var i = 0; i < partition.length; ++i) {
+		this.context.moveTo(partition[i].x * this.ratio, partition[i].y * this.ratio);
+		this.context.lineTo((partition[i].x + lines[i][0]) * this.ratio,
+            (partition[i].y + lines[i][1]) * this.ratio);
 	}
 	this.context.stroke();
 	this.context.closePath();
