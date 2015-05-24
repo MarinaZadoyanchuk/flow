@@ -8,9 +8,19 @@
   <script type="text/javascript" src="worker.js"></script>
   <script type="text/javascript" src="index.js"></script>
   <style>
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -khtml-user-select: none;
+      -ms-user-select: none
+      user-select : none;
+    }
     .menu {
       display: inline-block;
       vertical-align: top;
+    }
+    .menu-block {
+      padding-bottom: 15px;
     }
     .menu-item {
       display: block;
@@ -22,11 +32,17 @@
     
   </canvas>
   <div class="menu">
-    <a class="menu-item" href="javascript:controller.setField('psi')">psi</a>
-    <a class="menu-item" href="javascript:controller.setField('phi')">phi</a>
-    <a class="menu-item" href="javascript:controller.setField('speed')">speed</a>
-    <a class="menu-item" href="javascript:controller.setField('pressure')">pressure</a>
-    <a class="menu-item" href="javascript:controller.setField()">none</a>
+    <div class="menu-block">
+      <a class="menu-item" href="javascript:controller.setField('psi')">psi</a>
+      <a class="menu-item" href="javascript:controller.setField('phi')">phi</a>
+      <a class="menu-item" href="javascript:controller.setField('speed')">speed</a>
+      <a class="menu-item" href="javascript:controller.setField('pressure')">pressure</a>
+      <a class="menu-item" href="javascript:controller.setField()">none</a>
+    </div>
+    <div class="menu-block">
+      <a href="javascript:controller.setLetter('T')" class="menu-item">T</a>
+      <a href="javascript:controller.setLetter('Z')" class="menu-item">Z</a>
+    </div>
   </div>
   <script>
     window.controller = new MainController();

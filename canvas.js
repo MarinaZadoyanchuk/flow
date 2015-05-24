@@ -21,6 +21,13 @@ function Canvas(canvasId) {
     this.height = function() {
     	return this.size.h / this.ratio;
     }
+
+    this.canvas.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        var angle = Math.atan2(e.offsetY - this.baseY, -e.offsetX + this.baseX) % (2 * Math.PI);
+        console.log(angle);
+        window.dispatchEvent(new CustomEvent('anglechange', {'detail': angle}));
+    }.bind(this))
 }
 
 Canvas.prototype.clear = function() {
@@ -46,7 +53,9 @@ Canvas.prototype.drawLetter = function(letter) {
   this.style('#f00', 5);
   if (letter.breakpoint) {
     this.drawLine(letter.partition.slice(0, letter.breakpoint));
-    this.drawLine(letter.partition.slice(letter.breakpoint, letter.partition.length));
+    var segment = letter.partition.slice(letter.breakpoint, letter.partition.length);
+    segment.unshift({x : 2 * segment[0].x - segment[1].x, y: 2 * segment[0].y - segment[1].y})
+    this.drawLine(segment);
   } else {
     this.drawLine(letter.partition);
   }

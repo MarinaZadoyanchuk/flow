@@ -1,9 +1,9 @@
 
-function Worker(letter, partition) {
-  this.letter = letter;
-  this.partition = partition;
+function Worker(params) {
+  this.letter = params.letter;
+  this.partition = params.partition;
   this.gamma0 = 1;
-  this.alpha = 0;
+  this.alpha = params.angle || 0;
 
   this.gamma = this.findGamma();
   this.speed = this.calcSpeed();
@@ -16,7 +16,7 @@ Worker.prototype.findVj = function(p, discrete_p, delta)
     Math.pow(0.5 * delta, 2)
     );
   // max_length = Math.sqrt(max_length);
-  var uj = (1.0 / (2 * Math.PI)) * ((discrete_p.y - p.y) / max_length);
+  var uj = -(1.0 / (2 * Math.PI)) * ((p.y - discrete_p.y) / max_length);
   var vj = (1.0 / (2 * Math.PI)) * ((p.x - discrete_p.x) / max_length);
   // console.log(Math.pow(Math.pow(uj, 2) + Math.pow(vj, 2), 0.5))
   return [uj, vj];
@@ -26,14 +26,14 @@ Worker.prototype.findGamma = function()
 {
   var free_terms = [];
   var worker = this;
-  var v_inf = [Math.sin(this.alpha), Math.cos(this.alpha)];
+  var v_inf = [Math.cos(this.alpha), Math.sin(this.alpha)];
 
   var system = this.letter.partition_middle.map(function(middle_point) {
 
     var normal = [middle_point.normal.x, middle_point.normal.y];
 
     var current_equation = worker.letter.partition.map(function(edge_point) {
-      var vj = worker.findVj(middle_point, edge_point, worker.letter.step);
+      var vj = worker.findVj(edge_point, middle_point, worker.letter.step);
       return math.multiply(vj, normal);
     })
 
@@ -148,6 +148,9 @@ Worker.prototype.calcSpeed = function() {
 
 Worker.prototype.getSpeedLines = function() {
   return this.speed.map(function(v, i) {
+    if(math.norm(v) > 10) {
+      return [0, 0];
+    }
     return math.multiply(v, 0.03);
   });
 }
