@@ -24,17 +24,17 @@ function MainController() {
     var canvas = (new Canvas("first_canvas"));
 
     var letters = {};
-    letters['Z'] = (new LetterBuilder({x: -0.3, y: 0.7}, 0.07))
-    .addSegment(10, 0)
-    .addSegment(15, Math.PI * 5 / 4)
-    .addSegment(10, 0)
+    letters['Z'] = (new LetterBuilder({x: -0.3, y: 0.7}, 0.14))
+    .addSegment(5, 0)
+    .addSegment(7, Math.PI * 5 / 4)
+    .addSegment(5, 0)
     .getLetter();
     
-    letters['T'] = (new LetterBuilder({x: -0.5, y: 0.5}, 0.05))
-    .addSegment(5, Math.PI / 2)
-    .addSegment(20, 0)
-    .addSegment(5, -Math.PI / 2)
-    .addSegment(20, -Math.PI / 2, 0, 0.75)
+    letters['T'] = (new LetterBuilder({x: -0.45, y: 0.45}, 0.15))
+    .addSegment(2, Math.PI / 2)
+    .addSegment(6, 0)
+    .addSegment(2, -Math.PI / 2)
+    .addSegment(7, -Math.PI / 2, 0, 0.75)
     .getLetter();
     
     var partition = createPartition(canvas.width(), canvas.height(), 20 / canvas.ratio);
@@ -92,16 +92,34 @@ function MainController() {
         redraw();
     }
 
+    var actions = {};
     this.makeWhirls = function() {
-        worker.makeWhirls();
-        speedLines = worker.getSpeedLines();
-        redraw();
+        actions.whirls = true;
+    }
+    this.stop = function() {
+        actions.stop = true;
     }
 
-    this.makeStep = function() {
-        worker.makeStep();
-        speedLines = worker.getSpeedLines();
-        redraw();
+    this.start = function() {
+        if (actions.running) return;
+        actions.running = true;
+        actions.stop = false;
+        var step = function() {
+            if (actions.stop) {
+                actions.stop = false;
+                actions.running = false;
+                return;
+            }
+            if (actions.whirls) {
+                worker.makeWhirls();
+                actions.whirls = false;
+            }
+            worker.makeStep();
+            speedLines = worker.getSpeedLines();
+            redraw();
+            setTimeout(step, 0);
+        }
+        step();
     }
     recalc();
     redraw();

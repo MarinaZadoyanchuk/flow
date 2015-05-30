@@ -202,15 +202,13 @@ Worker.prototype.makeWhirls = function() {
     }
   }
   this.whirls = this.whirls.concat(whirls);
-
-  this.gamma = this.findGamma();
-  this.speed = this.calcSpeed();
 }
 
 Worker.prototype.makeStep = function() {
   for(var i = 0; i < this.whirls.length; ++i) {
-    this.whirls[i].location.x += this.whirls[i].speed[0] / 30;
-    this.whirls[i].location.y += this.whirls[i].speed[1] / 30;
+    var speed = this.findSpeed(this.whirls[i].location);
+    this.whirls[i].location.x += speed[0] / 30;
+    this.whirls[i].location.y += speed[1] / 30;
   }
 
   this.gamma = this.findGamma();
