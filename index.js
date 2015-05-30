@@ -61,6 +61,7 @@ function MainController() {
             canvas.drawLines(partition, speedLines);
         }
         canvas.drawAxis();
+        canvas.drawWhirls(worker.whirls);
         canvas.drawLetter(letter);
     }
 
@@ -86,7 +87,20 @@ function MainController() {
         if (letters[letterName]) {
             letter = letters[letterName];
         }
+        field = null;
         recalc();
+        redraw();
+    }
+
+    this.makeWhirls = function() {
+        worker.makeWhirls();
+        speedLines = worker.getSpeedLines();
+        redraw();
+    }
+
+    this.makeStep = function() {
+        worker.makeStep();
+        speedLines = worker.getSpeedLines();
         redraw();
     }
     recalc();

@@ -2,11 +2,13 @@
 var normal_constant = Math.PI / 2;
 
 function LetterBuilder(begin, step) {
+  begin.corner = true;
   this.letter = {
     partition_middle: [],
     partition: [begin],
     step: step
   }
+  this.letter.partition[0].corner = true;
 }
 
 LetterBuilder.prototype.getLetter = function() {
@@ -40,5 +42,6 @@ LetterBuilder.prototype.addSegment = function(n, alpha, x, y) {
     };
     this.letter.partition.push(last);
   }
+  this.letter.partition[this.letter.partition.length - 1].corner = true;
   return this;
 }

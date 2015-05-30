@@ -90,6 +90,20 @@ Canvas.prototype.drawField = function(partition, field) {
 	}
 }
 
+Canvas.prototype.drawWhirls = function(whirls) {
+    this.context.fillStyle = 'red';
+    for(var i = 0; i < whirls.length; ++i) {
+        this.context.beginPath();
+        this.context.arc(
+            whirls[i].location.x * this.ratio,
+            whirls[i].location.y * this.ratio,
+            3, 0, 2 * Math.PI
+        );
+        this.context.fill();
+        this.context.closePath();
+    }
+}
+
 Canvas.prototype.drawAxis = function(){
     baseY = this.size.h/2;
     baseX = this.size.w/2;

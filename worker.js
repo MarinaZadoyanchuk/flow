@@ -5,6 +5,8 @@ function Worker(params) {
   this.gamma0 = 1;
   this.alpha = params.angle || 0;
 
+  this.whirls = [];
+
   this.gamma = this.findGamma();
   this.speed = this.calcSpeed();
 }
@@ -15,10 +17,8 @@ Worker.prototype.findVj = function(p, discrete_p, delta)
     Math.pow(p.x - discrete_p.x, 2) + Math.pow(p.y - discrete_p.y, 2),
     Math.pow(0.5 * delta, 2)
     );
-  // max_length = Math.sqrt(max_length);
   var uj = -(1.0 / (2 * Math.PI)) * ((p.y - discrete_p.y) / max_length);
   var vj = (1.0 / (2 * Math.PI)) * ((p.x - discrete_p.x) / max_length);
-  // console.log(Math.pow(Math.pow(uj, 2) + Math.pow(vj, 2), 0.5))
   return [uj, vj];
 }
 
@@ -35,14 +35,22 @@ Worker.prototype.findGamma = function()
     var current_equation = worker.letter.partition.map(function(edge_point) {
       var vj = worker.findVj(edge_point, middle_point, worker.letter.step);
       return math.multiply(vj, normal);
+    });
+
+    var whirls_part = worker.whirls.map(function(whirl) {
+      var vj = worker.findVj(whirl.location, middle_point, worker.letter.step);
+      return math.multiply(vj, normal) * whirl.gamma;
     })
 
-    free_terms.push(-math.multiply(v_inf, normal));
+    free_terms.push(-math.multiply(v_inf, normal) - (whirls_part.length ? math.sum(whirls_part) : 0));
     return current_equation;
   })
 
   system.push(math.ones(this.letter.partition.length).toArray());
-  free_terms.push(this.gamma0);
+  var whirls_gammas = this.whirls.map(function(whirl) {
+    return whirl.gamma;
+  })
+  free_terms.push(this.gamma0 - (whirls_gammas.length ? math.sum(whirls_gammas) : 0));
 
   return math.inv(math.matrix(system)).multiply(free_terms).toArray();
 }
@@ -57,8 +65,13 @@ Worker.prototype.findSpeed = function(point)
   {
     var vj = this.findVj(point, this.letter.partition[i], this.letter.step);
     result_vector = math.add(result_vector, math.multiply(vj, this.gamma[i]));
-
   }
+  for(var i = 0; i < this.whirls.length; ++i) {
+    var vj = this.findVj(point, this.whirls[i].location, this.letter.step);
+    result_vector = math.add(result_vector, math.multiply(vj, this.whirls[i].gamma));
+  }
+
+
   return math.subtract(v_inf, result_vector).toArray();
 }
 
@@ -148,9 +161,6 @@ Worker.prototype.calcSpeed = function() {
 
 Worker.prototype.getSpeedLines = function() {
   return this.speed.map(function(v, i) {
-    if(math.norm(v) > 10) {
-      return [0, 0];
-    }
     return math.multiply(v, 0.03);
   });
 }
@@ -174,4 +184,35 @@ Worker.prototype.getPressureField = function() {
   return this.speed.map(function(pointSpeed) {
     return 1 - math.multiply(pointSpeed, pointSpeed) / math.multiply(v_inf, v_inf);
   });
+}
+
+Worker.prototype.makeWhirls = function() {
+  var whirls = [];
+  for(var i = 0; i < this.letter.partition.length; ++i) {
+    if (this.letter.partition[i].corner) {
+      var whirl = {
+        gamma: this.gamma[i],
+        location: {
+          x: this.letter.partition[i].x,
+          y: this.letter.partition[i].y
+        },
+        speed: this.findSpeed(this.letter.partition[i])
+      };
+      whirls.push(whirl);
+    }
+  }
+  this.whirls = this.whirls.concat(whirls);
+
+  this.gamma = this.findGamma();
+  this.speed = this.calcSpeed();
+}
+
+Worker.prototype.makeStep = function() {
+  for(var i = 0; i < this.whirls.length; ++i) {
+    this.whirls[i].location.x += this.whirls[i].speed[0] / 30;
+    this.whirls[i].location.y += this.whirls[i].speed[1] / 30;
+  }
+
+  this.gamma = this.findGamma();
+  this.speed = this.calcSpeed();
 }
