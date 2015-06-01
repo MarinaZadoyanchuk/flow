@@ -160,9 +160,7 @@ Worker.prototype.calcSpeed = function() {
 }
 
 Worker.prototype.getSpeedLines = function() {
-  return this.speed.map(function(v, i) {
-    return math.multiply(v, 0.03);
-  });
+  return this.speed;
 }
 
 Worker.prototype.getPhiField = function() {

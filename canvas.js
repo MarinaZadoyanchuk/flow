@@ -67,8 +67,8 @@ Canvas.prototype.drawLines = function(partition, lines) {
 	this.context.beginPath()
 	for(var i = 0; i < partition.length; ++i) {
 		this.context.moveTo(partition[i].x * this.ratio, partition[i].y * this.ratio);
-		this.context.lineTo((partition[i].x + lines[i][0]) * this.ratio,
-            (partition[i].y + lines[i][1]) * this.ratio);
+		this.context.lineTo((partition[i].x + lines[i][0] * 13.5 / this.ratio) * this.ratio,
+            (partition[i].y + lines[i][1] * 13.5 / this.ratio) * this.ratio);
 	}
 	this.context.stroke();
 	this.context.closePath();
