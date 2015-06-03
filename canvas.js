@@ -107,6 +107,8 @@ Canvas.prototype.drawWhirls = function(whirls) {
 Canvas.prototype.drawAxis = function(){
     baseY = this.size.h/2;
     baseX = this.size.w/2;
+    
+  	this.style('#000', 1);
 
  	this.context.beginPath();
  	//малюємо вісь Y

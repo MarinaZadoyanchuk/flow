@@ -41,7 +41,7 @@ function MainController() {
     var letter = letters['T'];
     var worker, speedLines, field, fieldGetter;
     var angle = 0;
-
+    var drawSpeed = true;
 
     var recalc = function() {
         worker = new Worker({
@@ -49,7 +49,9 @@ function MainController() {
             partition: partition,
             angle: angle
         });
-        speedLines = worker.getSpeedLines();
+        if (drawSpeed) {
+            speedLines = worker.getSpeedLines();
+        }
     }
 
     var redraw = function() {
@@ -120,12 +122,23 @@ function MainController() {
                 actions.whirls = false;
             }
             worker.makeStep();
-            speedLines = worker.getSpeedLines();
+            if (drawSpeed) {
+                speedLines = worker.getSpeedLines();
+            }
             recalcField();
             redraw();
             setTimeout(step, 0);
         }
         step();
+    }
+    this.toggleSpeed = function() {
+        drawSpeed = !drawSpeed;
+        if (drawSpeed) {
+            speedLines = worker.getSpeedLines();
+        } else {
+            speedLines = null;
+        }
+        redraw();
     }
     recalc();
     redraw();

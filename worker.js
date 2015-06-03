@@ -8,7 +8,6 @@ function Worker(params) {
   this.whirls = [];
 
   this.gamma = this.findGamma();
-  this.speed = this.calcSpeed();
 }
 
 Worker.prototype.findVj = function(p, discrete_p, delta)
@@ -123,6 +122,7 @@ Worker.prototype.calcSpeed = function() {
 }
 
 Worker.prototype.getSpeedLines = function() {
+  this.requireSpeedCalc();
   return this.speed;
 }
 
@@ -135,12 +135,14 @@ Worker.prototype.getPsiField = function() {
 }
 
 Worker.prototype.getSpeedField = function() {
+  this.requireSpeedCalc();
   return this.speed.map(function(pointSpeed){
     return math.sqrt(math.multiply(pointSpeed, pointSpeed));
   });
 }
 
 Worker.prototype.getPressureField = function() {
+  this.requireSpeedCalc();
   var v_inf = [Math.cos(this.alpha), Math.sin(this.alpha)];
   return this.speed.map(function(pointSpeed) {
     return 1 - math.multiply(pointSpeed, pointSpeed) / math.multiply(v_inf, v_inf);
@@ -173,5 +175,11 @@ Worker.prototype.makeStep = function() {
   }
 
   this.gamma = this.findGamma();
-  this.speed = this.calcSpeed();
+  this.speed = null;
+}
+
+Worker.prototype.requireSpeedCalc = function() {
+  if(!this.speed) {
+    this.speed = this.calcSpeed();
+  }
 }
