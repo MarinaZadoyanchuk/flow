@@ -140,6 +140,23 @@ function MainController() {
         }
         redraw();
     }
+
+    this.scale = function(sign) {
+        var scale;
+        if (sign === '-') {
+            scale = -20;
+        } else {
+            scale = 20;
+        }
+        canvas.ratio += scale;
+        console.log(canvas.ratio);
+        partition = createPartition(canvas.width(), canvas.height(), 20 / canvas.ratio);
+        recalc();
+        recalcField();
+        redraw();
+    }
+
+
     recalc();
     redraw();
 }

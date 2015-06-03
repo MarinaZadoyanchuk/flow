@@ -170,6 +170,9 @@ Worker.prototype.makeWhirls = function() {
 Worker.prototype.makeStep = function() {
   for(var i = 0; i < this.whirls.length; ++i) {
     var speed = this.findSpeed(this.whirls[i].location);
+    if (this.letter.inBorder(this.whirls[i].location, this.letter.step)) {
+      console.log(this.whirls[i].location);
+    }
     this.whirls[i].location.x += speed[0] / 30;
     this.whirls[i].location.y += speed[1] / 30;
   }

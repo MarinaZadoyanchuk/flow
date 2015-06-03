@@ -9,10 +9,38 @@ function LetterBuilder(begin, step) {
     step: step
   }
   this.letter.partition[0].corner = true;
+  this.refreshBorders(begin);
+  
+  this.letter.inBorder = function(point, delta) {
+    return (
+      (point.x > this.borders.left - delta)
+      && (point.x < this.borders.right + delta)
+      && (point.y < this.borders.top + delta)
+      && (point.y > this.borders.bottom - delta)
+    );
+  };
 }
 
 LetterBuilder.prototype.getLetter = function() {
   return this.letter;
+}
+
+LetterBuilder.prototype.refreshBorders = function(point) {
+  if (!this.letter.borders) {
+    this.letter.borders = {
+      top: point.y,
+      bottom: point.y,
+      left: point.x,
+      right: point.x
+    };
+  } else {
+    this.letter.borders = {
+      top: Math.max(this.letter.borders.top, point.y),
+      bottom: Math.min(this.letter.borders.bottom, point.y),
+      right: Math.max(this.letter.borders.right, point.x),
+      left: Math.min(this.letter.borders.left, point.x)
+    };
+  }
 }
 
 LetterBuilder.prototype.addSegment = function(n, alpha, x, y) {
@@ -43,5 +71,7 @@ LetterBuilder.prototype.addSegment = function(n, alpha, x, y) {
     this.letter.partition.push(last);
   }
   this.letter.partition[this.letter.partition.length - 1].corner = true;
+  this.refreshBorders(last);
+
   return this;
 }
