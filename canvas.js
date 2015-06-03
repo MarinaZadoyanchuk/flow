@@ -97,7 +97,7 @@ Canvas.prototype.drawWhirls = function(whirls) {
         this.context.arc(
             whirls[i].location.x * this.ratio,
             whirls[i].location.y * this.ratio,
-            3, 0, 2 * Math.PI
+            1.5, 0, 2 * Math.PI
         );
         this.context.fill();
         this.context.closePath();

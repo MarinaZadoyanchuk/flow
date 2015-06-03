@@ -85,6 +85,8 @@ function MainController() {
     this.setField = function(fieldName) {
         if (fieldName) {
             fieldGetter = worker['get' + fieldName[0].toUpperCase() + fieldName.slice(1) + 'Field'];
+        } else {
+            fieldGetter = null;
         }
         recalcField();
         redraw();
@@ -99,7 +101,31 @@ function MainController() {
         redraw();
     }
 
-    var actions = {};
+    var actions = {
+        tick: 0,
+        whirlsPeriod: 12
+    };
+    var step = function() {
+        if (actions.stop) {
+            actions.stop = false;
+            actions.running = false;
+            return;
+        }
+        if (actions.whirls) {
+            worker.makeWhirls();
+            actions.whirls = false;
+        } else if (actions.makingWhirls && actions.tick % actions.whirlsPeriod === 0) {
+            worker.makeWhirls();
+        }
+        worker.makeStep();
+        if (drawSpeed) {
+            speedLines = worker.getSpeedLines();
+        }
+        recalcField();
+        redraw();
+        actions.tick++;
+        setTimeout(step, 0);
+    };
     this.makeWhirls = function() {
         actions.whirls = true;
     }
@@ -107,30 +133,20 @@ function MainController() {
         actions.stop = true;
     }
 
-    this.start = function() {
-        if (actions.running) return;
-        actions.running = true;
-        actions.stop = false;
-        var step = function() {
-            if (actions.stop) {
-                actions.stop = false;
-                actions.running = false;
-                return;
-            }
-            if (actions.whirls) {
-                worker.makeWhirls();
-                actions.whirls = false;
-            }
-            worker.makeStep();
-            if (drawSpeed) {
-                speedLines = worker.getSpeedLines();
-            }
-            recalcField();
-            redraw();
-            setTimeout(step, 0);
-        }
-        step();
+    this.toggleMakingWhirls = function() {
+        actions.makingWhirls = !actions.makingWhirls;
     }
+
+    this.playPause = function() {
+        if (actions.running){
+            actions.stop = true;
+        } else {
+            actions.running = true;
+            actions.stop = false;
+            step();
+        }
+    }
+
     this.toggleSpeed = function() {
         drawSpeed = !drawSpeed;
         if (drawSpeed) {
