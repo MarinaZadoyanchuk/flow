@@ -168,13 +168,26 @@ Worker.prototype.makeWhirls = function() {
 }
 
 Worker.prototype.makeStep = function() {
+  var timeCoeff = 30;
   for(var i = 0; i < this.whirls.length; ++i) {
     var speed = this.findSpeed(this.whirls[i].location);
     if (this.letter.inBorder(this.whirls[i].location, this.letter.step)) {
-      console.log(this.whirls[i].location);
+      var newPoint = {
+        x: this.whirls[i].location.x + speed[0] / timeCoeff,
+        y: this.whirls[i].location.y + speed[1] / timeCoeff
+      };
+      if (this.letter.intersects([this.whirls[i].location, newPoint])) {
+        this.whirls[i].location = {
+          x: this.whirls[i].location.x - speed[0] / timeCoeff,
+          y: this.whirls[i].location.y - speed[1] / timeCoeff
+        };
+      } else {
+        this.whirls[i].location = newPoint;
+      }
+    } else {
+      this.whirls[i].location.x += speed[0] / timeCoeff;
+      this.whirls[i].location.y += speed[1] / timeCoeff;
     }
-    this.whirls[i].location.x += speed[0] / 30;
-    this.whirls[i].location.y += speed[1] / 30;
   }
 
   this.gamma = this.findGamma();
