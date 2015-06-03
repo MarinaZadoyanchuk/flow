@@ -39,7 +39,7 @@ function MainController() {
     
     var partition = createPartition(canvas.width(), canvas.height(), 20 / canvas.ratio);
     var letter = letters['T'];
-    var worker, speedLines, field;
+    var worker, speedLines, field, fieldGetter;
     var angle = 0;
 
 
@@ -68,18 +68,23 @@ function MainController() {
     window.addEventListener('anglechange', function(e) {
         angle = e.detail;
         recalc();
+        recalcField();
         redraw();
     })
 
-    this.setField = function(fieldName) {
-        if (fieldName) {
-            var fieldGetter = worker['get' + fieldName[0].toUpperCase() + fieldName.slice(1) + 'Field'];
-        }
+    var recalcField = function() {
         if (fieldGetter) {
             field = fieldGetter.call(worker);
         } else {
             field = null;
         }
+    };
+
+    this.setField = function(fieldName) {
+        if (fieldName) {
+            fieldGetter = worker['get' + fieldName[0].toUpperCase() + fieldName.slice(1) + 'Field'];
+        }
+        recalcField();
         redraw();
     }
 
@@ -87,8 +92,8 @@ function MainController() {
         if (letters[letterName]) {
             letter = letters[letterName];
         }
-        field = null;
         recalc();
+        recalcField();
         redraw();
     }
 
@@ -116,6 +121,7 @@ function MainController() {
             }
             worker.makeStep();
             speedLines = worker.getSpeedLines();
+            recalcField();
             redraw();
             setTimeout(step, 0);
         }
