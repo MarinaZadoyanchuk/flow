@@ -75,44 +75,24 @@ Worker.prototype.findSpeed = function(point)
   return math.subtract(v_inf, result_vector).toArray();
 }
 
+Worker.prototype.findPhij = function(p, discrete_p) {
+  return 1 / (2 * Math.PI) * Math.atan2(p.y - discrete_p.y, p.x - discrete_p.x);
+}
+
 Worker.prototype.findPhi =function(point)
 {
-  var x = point.x, y = point.y;
-  var s1 = 0;
-  var s2 = 0;
-  var result = 0;
-  var count_gamma = this.gamma.length;
-  // console.log(count_gamma, this.letter.partition_middle.length);
-  var sum_all_gamma = 0;
-  var log = 0;
-  var result = 0;
-  var sum_gamma;
-  var phi;
   var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  for(var i = 0; i<count_gamma-1; i++)
-  {
-    sum_gamma = 0;
-    for(var k = 0; k<=i; k++)
-    {
-      sum_gamma +=this.gamma[k];
-    }
-    // console.log(i);
-    s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].y - this.letter.partition[i].y) 
-    - (y - this.letter.partition_middle[i].y)*(this.letter.partition[i + 1].x - this.letter.partition[i].x);
-    s2 = Math.pow(x - this.letter.partition_middle[i].x, 2) + Math.pow(y - this.letter.partition_middle[i].y, 2);
-    result += (sum_gamma*s1)/(2*Math.PI*s2);
+
+  var phi = math.multiply(v, [point.x, point.y]);
+
+  for(var i = 0; i < this.letter.partition.length; ++i) {
+    phi += this.gamma[i] * this.findPhij(point, this.letter.partition[i]);
   }
-  for(var j = 0; j<count_gamma; j++)
-  {
-    sum_all_gamma += this.gamma[j];
+
+  for(var i = 0; i < this.whirls.length; ++i) {
+    phi += this.whirls[i].gamma * this.findPhij(point, this.whirls[i].location);
   }
-  // log = Math.pow(Math.log(Math.pow(x - this.letter.partition[count_gamma-1].x, 2)+Math.pow(y - this.letter.partition[count_gamma-1].y, 2)), 0.5);
-  atan = Math.atan2(
-    (y - this.letter.partition[this.letter.partition.length - 1].y) ,
-    (x - this.letter.partition[this.letter.partition.length - 1].x)
-    );
-  // atan = 1;
-  phi = x*v[0] + y*v[1] + result +(sum_all_gamma*atan)/(2*Math.PI);
+
   return phi;
 }
 
