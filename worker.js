@@ -96,42 +96,25 @@ Worker.prototype.findPhi =function(point)
   return phi;
 }
 
+Worker.prototype.findPsij = function(p, discrete_p, delta) {
+  var diff = [p.x - discrete_p.x, p.y - discrete_p.y];
+  return Math.log(Math.max(delta, math.sqrt(math.multiply(diff, diff))));
+}
+
 Worker.prototype.findPsi = function(point)
 {
-  var x = point.x, y = point.y;
-  var s1 = 0;
-  var s2 = 0;
-  var result = 0;
-  var count_gamma = this.gamma.length;
-  var sum_all_gamma = 0;
-  var log = 0;
-  var result = 0;
-  var sum_gamma;
-  var psi;
   var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  for(var i = 0; i<count_gamma-1; i++)
-  {
-    sum_gamma = 0;
-    for(var k = 0; k<=i; k++)
-    {
-      sum_gamma +=this.gamma[k];
-    }
-    // console.log(i);
-    s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].x - this.letter.partition[i].x) 
-    + (y - this.letter.partition_middle[i].y)*(this.letter.partition[i + 1].y - this.letter.partition[i].y);
-    s2 = Math.pow(x - this.letter.partition_middle[i].x, 2) + Math.pow(y - this.letter.partition_middle[i].y, 2);
-    result += (sum_gamma*s1)/(2*Math.PI*s2);
+
+  var psi = point.y * v[0] - point.x * v[1];
+
+  for(var i = 0; i < this.letter.partition.length; ++i) {
+    psi -= this.gamma[i] * this.findPsij(point, this.letter.partition[i], this.letter.step * 0.5);
   }
-  for(var j = 0; j<count_gamma; j++)
-  {
-    sum_all_gamma += this.gamma[j];
+
+  for(var i = 0; i < this.whirls.length; ++i) {
+    psi -= this.whirls[i].gamma * this.findPsij(point, this.whirls[i].location, this.letter.step * 0.5);
   }
-  log = 0.5 * Math.log(
-    Math.pow(x - this.letter.partition[this.letter.partition.length - 1].x, 2)
-    + Math.pow(y - this.letter.partition[this.letter.partition.length - 1].y, 2)
-    );
-  // log = 1;
-  psi = y*v[0] - x*v[1] + result +(sum_all_gamma*log)/(2*Math.PI);
+
   return psi;
 }
 
