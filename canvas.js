@@ -78,12 +78,25 @@ Canvas.prototype.drawField = function(partition, field) {
 	function get_color_by_value(value, min, max)
 	{
 		var arr_colors = {
+					// 0 : '256, 256, 256',
+					// 1 : '153, 255, 255',
+					// 2 :'51, 255, 204',
+					// 3 : '0, 204, 153',
+					// 4 : '51, 153, 255', 
+					// 5 : '51, 102, 204',  
+					// 6 : '0, 0, 204',
+					// 7 : '102, 51, 153',
+					// 8 : '102, 0, 102',
+					// 9 : '102, 0, 51',
+					// 10 : '153, 0, 0',
+					// 11: '51, 0, 51',
+					// 12 : '0, 0, 0'
 					0 : '224, 255, 255',
 					1 :'175, 238, 238',
-					5 : '0, 255, 255',
-					4 : '64, 224, 208', 
-					3 : '72, 209, 204',  
-					2 : '0, 206, 209'
+					2 : '0, 255, 255',
+					3 : '64, 224, 208', 
+					4 : '72, 209, 204',  
+					5 : '0, 206, 209'
 		}; 
 		var coef = Math.floor(256 / 6);
 		var color_point =  Math.floor((value - min) / (max - min) * 256);
@@ -100,7 +113,7 @@ Canvas.prototype.drawField = function(partition, field) {
 		var color = get_color_by_value(field[i], min_value, max_value);
 		// console.log(color);
 		this.context.fillStyle = 'rgb(' + color + ')';
-		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, 4, 4);
+		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, 3, 3);
 	}
 }
 

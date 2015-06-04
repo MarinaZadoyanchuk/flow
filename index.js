@@ -37,7 +37,7 @@ function MainController() {
     .addSegment(7, -Math.PI / 2, 0, 0.75)
     .getLetter();
     
-    var partition = createPartition(canvas.width(), canvas.height(), 4 / canvas.ratio, 4 / canvas.ratio);
+    var partition = createPartition(canvas.width(), canvas.height(), 3 / canvas.ratio, 3 / canvas.ratio);
     var letter = letters['T'];
     var worker, speedLines, field, fieldGetter;
     var angle = 0;
