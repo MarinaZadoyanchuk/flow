@@ -105,14 +105,20 @@ Worker.prototype.findPsi = function(point)
   var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
 
   var psi = point.y * v[0] - point.x * v[1];
-
   for(var i = 0; i < this.letter.partition.length; ++i) {
-    psi -= this.gamma[i] * this.findPsij(point, this.letter.partition[i], this.letter.step * 0.5);
-  }
+    psi -= this.gamma[i] * this.findPsij(this.letter.partition[i], point, this.letter.step * 0.5);
+   }
 
-  for(var i = 0; i < this.whirls.length; ++i) {
-    psi -= this.whirls[i].gamma * this.findPsij(point, this.whirls[i].location, this.letter.step * 0.5);
-  }
+   for(var i = 0; i < this.whirls.length; ++i) {
+     psi -= this.whirls[i].gamma * this.findPsij(this.whirls[i].location, point, this.letter.step * 0.5);
+   }
+  // for(var i = 0; i < this.letter.partition.length; ++i) {
+  //   psi -= this.gamma[i] * this.findPsij(point, this.letter.partition[i], this.letter.step * 0.5);
+  // }
+
+  // for(var i = 0; i < this.whirls.length; ++i) {
+  //   psi -= this.whirls[i].gamma * this.findPsij(point, this.whirls[i].location, this.letter.step * 0.5);
+  // }
 
   return psi;
 }

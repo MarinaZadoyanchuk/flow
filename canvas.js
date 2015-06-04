@@ -77,16 +77,30 @@ Canvas.prototype.drawLines = function(partition, lines) {
 Canvas.prototype.drawField = function(partition, field) {
 	function get_color_by_value(value, min, max)
 	{
-		return Math.floor((max - value) / (max - min) * 256);
+		var arr_colors = {
+					0 : '224, 255, 255',
+					1 :'175, 238, 238',
+					5 : '0, 255, 255',
+					4 : '64, 224, 208', 
+					3 : '72, 209, 204',  
+					2 : '0, 206, 209'
+		}; 
+		var coef = Math.floor(256 / 6);
+		var color_point =  Math.floor((value - min) / (max - min) * 256);
+		var index = (color_point - color_point % coef) / coef;
+		// console.log(color_point, index, coef);
+		return arr_colors[index];
 	}
 
 	max_value = Math.max.apply(Math, field);
 	min_value = Math.min.apply(Math, field);
+	console.log(max_value, min_value);
 	for(var i = 0; i < partition.length; i++)
 	{
 		var color = get_color_by_value(field[i], min_value, max_value);
-		this.context.fillStyle = 'rgb('+ color +','+ color+ ','+ color+')';
-		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, 20, 20);
+		// console.log(color);
+		this.context.fillStyle = 'rgb(' + color + ')';
+		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, 4, 4);
 	}
 }
 

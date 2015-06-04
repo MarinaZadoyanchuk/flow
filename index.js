@@ -1,5 +1,5 @@
 
-function createPartition(w,h, step)
+function createPartition(w,h, step_w, step_h)
 {
   var partition = new Array();
   var i = -w / 2;
@@ -11,9 +11,9 @@ function createPartition(w,h, step)
     while(j < h / 2)
     {
       partition.push({x: i, y:j});
-      j = j+step;
+      j = j+step_h;
     }
-    i = i+step;
+    i = i+step_w;
   }
   return partition;
 }
@@ -37,7 +37,7 @@ function MainController() {
     .addSegment(7, -Math.PI / 2, 0, 0.75)
     .getLetter();
     
-    var partition = createPartition(canvas.width(), canvas.height(), 20 / canvas.ratio);
+    var partition = createPartition(canvas.width(), canvas.height(), 4 / canvas.ratio, 4 / canvas.ratio);
     var letter = letters['T'];
     var worker, speedLines, field, fieldGetter;
     var angle = 0;
@@ -166,7 +166,7 @@ function MainController() {
         }
         canvas.ratio += scale;
         console.log(canvas.ratio);
-        partition = createPartition(canvas.width(), canvas.height(), 20 / canvas.ratio);
+        partition = createPartition(canvas.width(), canvas.height(), 2 / canvas.ratio, 5 / canvas.ratio);
         recalc();
         recalcField();
         redraw();
