@@ -94,11 +94,17 @@ Canvas.prototype.drawField = function(partition, field) {
 					0 : '224, 255, 255',
 					1 :'175, 238, 238',
 					2 : '0, 255, 255',
+					3 : '0, 204, 204',
 					3 : '64, 224, 208', 
 					4 : '72, 209, 204',  
-					5 : '0, 206, 209'
+					5 : '0, 206, 209',
+					6 : '102, 204, 255',
+					7 : '51, 153, 204',
+					8 : '0, 102, 153',
+					9 : '0, 51, 102',
+					10 : '0, 0, 51'
 		}; 
-		var coef = Math.floor(256 / 6);
+		var coef = Math.floor(256 / 11);
 		var color_point =  Math.floor((value - min) / (max - min) * 256);
 		var index = (color_point - color_point % coef) / coef;
 		// console.log(color_point, index, coef);
