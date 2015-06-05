@@ -14,8 +14,8 @@ function Worker(params) {
 Worker.prototype.findVj = function(p, discrete_p, delta)
 { 
   var max_length = Math.max(
-    Math.pow(p.x - discrete_p.x, 2) + Math.pow(p.y - discrete_p.y, 2),
-    Math.pow(0.5 * delta, 2)
+    math.square(p.x - discrete_p.x) + math.square(p.y - discrete_p.y),
+    math.square(0.5 * delta)
     );
   var uj = -(1.0 / (2 * Math.PI)) * ((p.y - discrete_p.y) / max_length);
   var vj = (1.0 / (2 * Math.PI)) * ((p.x - discrete_p.x) / max_length);
@@ -282,8 +282,8 @@ Worker.prototype.findPsiOld = function(point)
     // console.log(i);
     s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].x - this.letter.partition[i].x) 
     + (y - this.letter.partition_middle[i].y)*(this.letter.partition[i + 1].y - this.letter.partition[i].y);
-    s2 = Math.pow(x - this.letter.partition_middle[i].x, 2) + Math.pow(y - this.letter.partition_middle[i].y, 2);
-    s2 = Math.max(s2, this.letter.step * this.letter.step / 4);
+    s2 = math.square(x - this.letter.partition_middle[i].x) + math.square(y - this.letter.partition_middle[i].y);
+    s2 = Math.max(s2, math.square(this.letter.step));
     result += (sum_gamma*s1)/(2*Math.PI*s2);
   }
   for(var j = 0; j<count_gamma; j++)

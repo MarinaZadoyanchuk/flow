@@ -1,7 +1,8 @@
 
 function Canvas(canvasId) {
 
-    this.canvas = document.getElementById(canvasId);
+    this.canvas = document.getElementById('canvas');
+    this.legend = document.getElementById('legend');
     this.size = {};
     this.size.lIndent = 10;
     this.size.rIndent = 10;
@@ -31,6 +32,7 @@ function Canvas(canvasId) {
 
 Canvas.prototype.clear = function() {
     this.context.clearRect(-this.baseX, -this.baseY, this.size.w, this.size.h);
+    this.drawLegend([]);
 }
 
 Canvas.prototype.style = function(strokeStyle, lineWidth) {
@@ -73,41 +75,57 @@ Canvas.prototype.drawLines = function(partition, lines) {
 	this.context.closePath();
 }
 
-Canvas.prototype.drawField = function(partition, field) {
-	var get_color_by_value;
-	if (true) {
-		var get_color_by_value = function(value, min, max)
-		{
-			var arr_colors = [
-				'224, 255, 255',
-				'175, 238, 238',
-				'0, 255, 255',
-				'64, 224, 208', 
-				'72, 209, 204',  
-				'0, 206, 209',
-				'102, 204, 255',
-				'51, 153, 204',
-				'0, 102, 153',
-				'0, 51, 102',
-				'0, 0, 51'
-			]; 
-			var index =  Math.floor((value - min) / (max - min) * arr_colors.length);
-			return arr_colors[index];
-		};
-	} else {
-		var get_color_by_value = function(value, min, max) {
-			var color = 255 - Math.floor((value - min) / (max - min) * 256);
-			return [color, color, color].join(', ');
-		}
-	}
+var arr_colors = [
+    '224, 255, 255',
+    '175, 238, 238',
+    '0, 255, 255',
+    '64, 224, 208', 
+    '72, 209, 204',  
+    '0, 206, 209',
+    '102, 204, 255',
+    '51, 153, 204',
+    '0, 102, 153',
+    '0, 51, 102',
+    '0, 0, 51'
+]; 
+var getColorByValueBlue = function(value, min, max) {
+    var index =  Math.floor((value - min) / (max - min) * arr_colors.length);
+    return 'rgb(' + arr_colors[index] + ')';
+};
+var getLegendBlue = function(min, max) {
+    var step = (max - min) / (arr_colors.length);
+    return arr_colors.map(function(color, i) {
+        return {
+            color: 'rgb(' + color + ')',
+            value: min + step * i
+        }
+    });
+};
 
-	max_value = Math.max.apply(Math, field);
-	min_value = Math.min.apply(Math, field);
+var getColorByValueGrey = function(value, min, max) {
+    var color = 255 - Math.floor((value - min) / (max - min) * 256);
+    return 'rgb(' + [color, color, color].join(', ') + ')';
+}
+
+Canvas.prototype.drawLegend = function(legend) {
+    var legendItem = function(item) {
+        return '<div class="legend-item">' + 
+            '<div class="legend-color" style="background-color: ' + item.color + ';"></div>' +
+            '<div class="legend-value">' + item.value.toFixed(2) + '</div>' +
+        '</div>';
+    }
+    this.legend.innerHTML = legend.map(legendItem).join('');
+}
+
+Canvas.prototype.drawField = function(partition, field) {
+	var max_value = Math.max.apply(Math, field);
+	var min_value = Math.min.apply(Math, field);
 	for(var i = 0; i < partition.length; i++)
 	{
-		this.context.fillStyle = 'rgb(' + get_color_by_value(field[i], min_value, max_value) + ')';
+		this.context.fillStyle = getColorByValueBlue(field[i], min_value, max_value);
 		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, partition.step, partition.step);
 	}
+    this.drawLegend(getLegendBlue(min_value, max_value));
 }
 
 Canvas.prototype.drawWhirls = function(whirls) {

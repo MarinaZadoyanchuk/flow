@@ -26,12 +26,21 @@
     .menu-item {
       display: block;
     }
+    .legend-color {
+      width: 50px;
+      height: 30px;
+      display: inline-block;
+    }
+    .legend-value {
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 7px;
+    }
   </style>
 </head>
 <body>
-  <canvas id="first_canvas" width="1000px" height="1000px">
-    
-  </canvas>
+  <canvas id="canvas" width="1000px" height="1000px"></canvas>
+
   <div class="menu">
     <div class="menu-block">
       <a class="menu-item" href="javascript:controller.setField('psi')">psi</a>
@@ -62,6 +71,7 @@
       <a href="javascript:controller.changePartitionStep('big')" class="menu-item">big step</a>
       <a href="javascript:controller.changePartitionStep('small')" class="menu-item">small step</a>
     </div>
+    <div id ="legend"></div>
   </div>
   <script>
     window.controller = new MainController();

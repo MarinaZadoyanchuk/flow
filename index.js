@@ -9,7 +9,7 @@ var constants = {
 
 function MainController() {
 
-    var canvas = (new Canvas("first_canvas"));
+    var canvas = new Canvas();
 
     var letters = {};
     letters['Z'] = (new LetterBuilder({x: -0.3, y: 0.7}, 0.14))
@@ -27,7 +27,7 @@ function MainController() {
     var letter = letters['T'];
     
     var partitions = {};
-    var currentPartitionStep = constants.smallPartitionStep;
+    var currentPartitionStep = constants.bigPartitionStep;
     var worker;
     var angle = constants.startAngle;
     var layers = {
