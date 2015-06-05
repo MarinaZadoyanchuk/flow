@@ -75,44 +75,89 @@ Worker.prototype.findSpeed = function(point)
   return math.subtract(v_inf, result_vector).toArray();
 }
 
-Worker.prototype.findPhij = function(p, discrete_p) {
-  return 1 / (2 * Math.PI) * Math.atan2(p.y - discrete_p.y, p.x - discrete_p.x);
+Worker.prototype.phiJ = function(p, discrete_p) {
+  return 0.5 / (2 * Math.PI) * Math.atan2(p.y - discrete_p.y, p.x - discrete_p.x);
 }
 
-Worker.prototype.findPhi =function(point)
+Worker.prototype.findPhi = function(p)
 {
+  var findPart = function(start, end) {
+    var result = 0;
+    var sumGamma = 0;
+    for(var i = start; i < end - 1; i++)
+    {
+      sumGamma += this.gamma[i];
+      var edgeNext = this.letter.partition[i + 1];
+      var middle = this.letter.partition_middle[i];
+      var edge = this.letter.partition[i];
+      var s1 = (p.x - middle.x) * (edgeNext.y - edge.y) - (p.y - middle.y) * (edgeNext.x - edge.x);
+      var s2 = math.max(math.square(this.letter.step), math.square(p.x - middle.x) + math.square(p.y - middle.y));
+      result += (sumGamma * s1) / (2 * Math.PI * s2);
+    }
+    var last = this.letter.partition[end - 1];
+    sumGamma += this.gamma[end - 1];
+
+    result += sumGamma * this.phiJ(p, last);
+    return result;
+  };
+
+  findPart = findPart.bind(this);
+
   var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-
-  var phi = math.multiply(v, [point.x, point.y]);
-
-  for(var i = 0; i < this.letter.partition.length; ++i) {
-    phi += this.gamma[i] * this.findPhij(point, this.letter.partition[i]);
+  var phi = p.x * v[0] + p.y * v[1];
+  if (this.letter.breakpoint) {
+    phi += findPart(0, this.letter.breakpoint) + findPart(this.letter.breakpoint, this.gamma.length);
+  } else {
+    phi += findPart(0, this.gamma.length);
   }
 
+
   for(var i = 0; i < this.whirls.length; ++i) {
-    phi += this.whirls[i].gamma * this.findPhij(point, this.whirls[i].location);
+    phi += this.whirls[i].gamma * this.phiJ(p, this.whirls[i].location);
   }
 
   return phi;
 }
 
-Worker.prototype.findPsij = function(p, discrete_p, delta) {
+Worker.prototype.psiJ = function(p, discrete_p) {
   var diff = [p.x - discrete_p.x, p.y - discrete_p.y];
-  return Math.log(Math.max(delta, math.sqrt(math.multiply(diff, diff))));
+  return 0.5 * Math.log(math.multiply(diff, diff)) / (2 * Math.PI);
 }
 
-Worker.prototype.findPsi = function(point)
+Worker.prototype.findPsi = function(p)
 {
+  var findPart = function(start, end) {
+    var result = 0;
+    var sumGamma = 0;
+    for(var i = start; i < end - 1; i++)
+    {
+      sumGamma += this.gamma[i];
+      var edgeNext = this.letter.partition[i + 1];
+      var middle = this.letter.partition_middle[i];
+      var edge = this.letter.partition[i];
+      var s1 = (p.x - middle.x) * (edgeNext.x - edge.x) + (p.y - middle.y) * (edgeNext.y - edge.y);
+      var s2 = math.max(math.square(this.letter.step), math.square(p.x - middle.x) + math.square(p.y - middle.y));
+      result += (sumGamma * s1) / (2 * Math.PI * s2);
+    }
+    var last = this.letter.partition[end - 1];
+    sumGamma += this.gamma[end - 1];
+
+    result += sumGamma * this.psiJ(p, last);
+    return result;
+  };
+
+  findPart = findPart.bind(this);
+
   var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-
-  var psi = point.y * v[0] - point.x * v[1];
-
-  for(var i = 0; i < this.letter.partition.length; ++i) {
-    psi -= this.gamma[i] * this.findPsij(point, this.letter.partition[i], this.letter.step * 0.5);
+  var psi = p.y * v[0] - p.x * v[1];
+  if (this.letter.breakpoint) {
+    psi += findPart(0, this.letter.breakpoint) + findPart(this.letter.breakpoint, this.gamma.length);
+  } else {
+    psi += findPart(0, this.gamma.length);
   }
 
   for(var i = 0; i < this.whirls.length; ++i) {
-    psi -= this.whirls[i].gamma * this.findPsij(point, this.whirls[i].location, this.letter.step * 0.5);
+    psi += this.whirls[i].gamma * this.psiJ(p, this.whirls[i].location);
   }
 
   return psi;
@@ -209,100 +254,4 @@ Worker.prototype.getLetterWhirls = function() {
       gamma: gamma[i]
     }
   });
-}
-
-
-
-
-
-
-
-Worker.prototype.findPhiOld =function(point)
-{
-  var x = point.x, y = point.y;
-  var s1 = 0;
-  var s2 = 0;
-  var result = 0;
-  var count_gamma = this.gamma.length;
-  // console.log(count_gamma, this.letter.partition_middle.length);
-  var sum_all_gamma = 0;
-  var log = 0;
-  var result = 0;
-  var sum_gamma;
-  var phi;
-  var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  for(var i = 0; i<count_gamma-1; i++)
-  {
-    sum_gamma = 0;
-    for(var k = 0; k<=i; k++)
-    {
-      sum_gamma +=this.gamma[k];
-    }
-    // console.log(i);
-    s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].y - this.letter.partition[i].y) 
-    - (y - this.letter.partition_middle[i].y)*(this.letter.partition[i + 1].x - this.letter.partition[i].x);
-    s2 = Math.pow(x - this.letter.partition_middle[i].x, 2) + Math.pow(y - this.letter.partition_middle[i].y, 2);
-    s2 = Math.max(s2, this.letter.step * this.letter.step / 4);
-    result += (sum_gamma*s1)/(2*Math.PI*s2);
-  }
-  for(var j = 0; j<count_gamma; j++)
-  {
-    sum_all_gamma += this.gamma[j];
-  }
-  // log = Math.pow(Math.log(Math.pow(x - this.letter.partition[count_gamma-1].x, 2)+Math.pow(y - this.letter.partition[count_gamma-1].y, 2)), 0.5);
-  atan = Math.atan2(
-    (y - this.letter.partition[this.letter.partition.length - 1].y) ,
-    (x - this.letter.partition[this.letter.partition.length - 1].x)
-    );
-  // atan = 1;
-  phi = x*v[0] + y*v[1] + result +(sum_all_gamma*atan)/(2*Math.PI);
-  return phi;
-}
-
-Worker.prototype.findPsiOld = function(point)
-{
-  var x = point.x, y = point.y;
-  var s1 = 0;
-  var s2 = 0;
-  var result = 0;
-  var count_gamma = this.gamma.length;
-  var sum_all_gamma = 0;
-  var log = 0;
-  var result = 0;
-  var sum_gamma;
-  var psi;
-  var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  for(var i = 0; i<count_gamma-1; i++)
-  {
-    sum_gamma = 0;
-    for(var k = 0; k<=i; k++)
-    {
-      sum_gamma +=this.gamma[k];
-    }
-    // console.log(i);
-    s1 = (x - this.letter.partition_middle[i].x)*(this.letter.partition[i + 1].x - this.letter.partition[i].x) 
-    + (y - this.letter.partition_middle[i].y)*(this.letter.partition[i + 1].y - this.letter.partition[i].y);
-    s2 = math.square(x - this.letter.partition_middle[i].x) + math.square(y - this.letter.partition_middle[i].y);
-    s2 = Math.max(s2, math.square(this.letter.step));
-    result += (sum_gamma*s1)/(2*Math.PI*s2);
-  }
-  for(var j = 0; j<count_gamma; j++)
-  {
-    sum_all_gamma += this.gamma[j];
-  }
-  log = 0.5 * Math.log(
-    Math.pow(x - this.letter.partition[this.letter.partition.length - 1].x, 2)
-    + Math.pow(y - this.letter.partition[this.letter.partition.length - 1].y, 2)
-    );
-  // log = 1;
-  psi = y*v[0] - x*v[1] + result +(sum_all_gamma*log)/(2*Math.PI);
-  return psi;
-}
-
-Worker.prototype.getPhiOldField = function(partition) {
-  return partition.map(this.findPhiOld.bind(this));
-}
-
-Worker.prototype.getPsiOldField = function(partition) {
-  return partition.map(this.findPsiOld.bind(this));
 }
