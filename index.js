@@ -58,8 +58,8 @@ function MainController() {
             canvas.drawLines(partitions[layers.speed.partitionStep], layers.speed.lines);
         }
         canvas.drawAxis();
-        canvas.drawWhirls(worker.whirls);
         canvas.drawLetter(letter);
+        canvas.drawWhirls(worker.whirls.concat(worker.getLetterWhirls()));
     };
 
     window.addEventListener('anglechange', function(e) {

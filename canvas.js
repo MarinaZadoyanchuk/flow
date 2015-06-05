@@ -49,7 +49,7 @@ Canvas.prototype.drawLine = function(points) {
 }
 
 Canvas.prototype.drawLetter = function(letter) {
-  this.style('#f00', 5);
+  this.style('#f00', 3);
   if (letter.breakpoint) {
     this.drawLine(letter.partition.slice(0, letter.breakpoint));
     var segment = letter.partition.slice(letter.breakpoint, letter.partition.length);
@@ -74,36 +74,31 @@ Canvas.prototype.drawLines = function(partition, lines) {
 }
 
 Canvas.prototype.drawField = function(partition, field) {
-	function get_color_by_value(value, min, max)
-	{
-		var arr_colors = [
-			//'256, 256, 256',
-			//'153, 255, 255',
-			//'51, 255, 204',
-			//'0, 204, 153',
-			//'51, 153, 255', 
-			//'51, 102, 204',  
-			//'0, 0, 204',
-			//'102, 51, 153',
-			//'102, 0, 102',
-			//'102, 0, 51',
-			//'153, 0, 0',
-			//'51, 0, 51',
-			//'0, 0, 0'
-			 '224, 255, 255',
-			'175, 238, 238',
-			 '0, 255, 255',
-			 '64, 224, 208', 
-			 '72, 209, 204',  
-			 '0, 206, 209',
-			 '102, 204, 255',
-			 '51, 153, 204',
-			 '0, 102, 153',
-			 '0, 51, 102',
-			 '0, 0, 51'
-		]; 
-		var index =  Math.floor((value - min) / (max - min) * arr_colors.length);
-		return arr_colors[index];
+	var get_color_by_value;
+	if (true) {
+		var get_color_by_value = function(value, min, max)
+		{
+			var arr_colors = [
+				'224, 255, 255',
+				'175, 238, 238',
+				'0, 255, 255',
+				'64, 224, 208', 
+				'72, 209, 204',  
+				'0, 206, 209',
+				'102, 204, 255',
+				'51, 153, 204',
+				'0, 102, 153',
+				'0, 51, 102',
+				'0, 0, 51'
+			]; 
+			var index =  Math.floor((value - min) / (max - min) * arr_colors.length);
+			return arr_colors[index];
+		};
+	} else {
+		var get_color_by_value = function(value, min, max) {
+			var color = 255 - Math.floor((value - min) / (max - min) * 256);
+			return [color, color, color].join(', ');
+		}
 	}
 
 	max_value = Math.max.apply(Math, field);
@@ -116,13 +111,14 @@ Canvas.prototype.drawField = function(partition, field) {
 }
 
 Canvas.prototype.drawWhirls = function(whirls) {
-    this.context.fillStyle = 'red';
     for(var i = 0; i < whirls.length; ++i) {
+	    this.context.fillStyle = whirls[i].gamma > 0 ? 'red' : 'blue';
         this.context.beginPath();
         this.context.arc(
             whirls[i].location.x * this.ratio,
             whirls[i].location.y * this.ratio,
-            1.5, 0, 2 * Math.PI
+            0.5 + 10 * Math.abs(whirls[i].gamma),
+            0, 2 * Math.PI
         );
         this.context.fill();
         this.context.closePath();
@@ -155,7 +151,7 @@ Canvas.prototype.drawAxis = function(){
     baseY = this.size.h/2;
     baseX = this.size.w/2;
     
-  	this.style('#000', 1);
+  	this.style('#aaa', 1);
 
  	this.context.beginPath();
  	//малюємо вісь Y
