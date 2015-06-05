@@ -24,6 +24,10 @@ function MainController() {
     .addSegment(2, -Math.PI / 2)
     .addSegment(7, -Math.PI / 2, 0, 0.75)
     .getLetter();
+    
+    letters['slash'] = (new LetterBuilder({x: -9, y: 8}, 0.1))
+    .addSegment(10, Math.PI / 4)
+    .getLetter();
     var letter = letters['T'];
     
     var partitions = {};
