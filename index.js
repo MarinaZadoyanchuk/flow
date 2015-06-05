@@ -1,23 +1,11 @@
 
-function createPartition(w,h, step_w, step_h)
-{
-  var partition = new Array();
-  var i = -w / 2;
-  var j = -h / 2;
-
-  while(i < w / 2)
-  {
-    j = -h / 2;
-    while(j < h / 2)
-    {
-      partition.push({x: i, y:j});
-      j = j+step_h;
-    }
-    i = i+step_w;
-  }
-  return partition;
+var constants = {
+    whirlsPeriod: 12,
+    smallPartitionStep: 3,
+    bigPartitionStep: 20,
+    startAngle: 0,
+    scaleStep: 20
 }
-
 
 function MainController() {
 
@@ -36,59 +24,73 @@ function MainController() {
     .addSegment(2, -Math.PI / 2)
     .addSegment(7, -Math.PI / 2, 0, 0.75)
     .getLetter();
-    
-    var partition = createPartition(canvas.width(), canvas.height(), 3 / canvas.ratio, 3 / canvas.ratio);
     var letter = letters['T'];
-    var worker, speedLines, field, fieldGetter;
-    var angle = 0;
-    var drawSpeed = true;
+    
+    var partitions = {};
+    var currentPartitionStep = constants.smallPartitionStep;
+    var worker;
+    var angle = constants.startAngle;
+    var layers = {
+        field: {
+            recalc: function(){}
+        },
+        speed: {
+            recalc: function(){}
+        }
+    };
 
     var recalc = function() {
         worker = new Worker({
             letter: letter,
-            partition: partition,
             angle: angle
         });
-        if (drawSpeed) {
-            speedLines = worker.getSpeedLines();
-        }
-    }
+        partitions[constants.smallPartitionStep] = canvas.getPartition(constants.smallPartitionStep);
+        partitions[constants.bigPartitionStep] = canvas.getPartition(constants.bigPartitionStep);
+        layers.speed.recalc();
+    };
 
     var redraw = function() {
         canvas.clear()
-        if (field) {
-            canvas.drawField(partition, field);
+        if (layers.field.field) {
+            canvas.drawField(partitions[layers.field.partitionStep], layers.field.field);
         }
-        if (speedLines) {
-            canvas.drawLines(partition, speedLines);
+        if (layers.speed.lines) {
+            canvas.drawLines(partitions[layers.speed.partitionStep], layers.speed.lines);
         }
         canvas.drawAxis();
         canvas.drawWhirls(worker.whirls);
         canvas.drawLetter(letter);
-    }
+    };
 
     window.addEventListener('anglechange', function(e) {
         angle = e.detail;
         recalc();
-        recalcField();
+        layers.field.recalc();
         redraw();
     })
 
-    var recalcField = function() {
-        if (fieldGetter) {
-            field = fieldGetter.call(worker);
-        } else {
-            field = null;
-        }
-    };
 
     this.setField = function(fieldName) {
         if (fieldName) {
-            fieldGetter = worker['get' + fieldName[0].toUpperCase() + fieldName.slice(1) + 'Field'];
+            layers.field = {
+                field: null,
+                partitionStep: currentPartitionStep,
+                fieldName: fieldName,
+                recalc: function() {
+                    var fieldGetter = worker['get' + fieldName[0].toUpperCase() + fieldName.slice(1) + 'Field'];
+                    if (fieldGetter) {
+                        this.field = fieldGetter.call(worker, partitions[this.partitionStep]);
+                    } else {
+                        this.field = null;
+                    }
+                }
+            };
+            layers.field.recalc();
         } else {
-            fieldGetter = null;
+            layers.field = {
+                recalc: function() {}
+            }
         }
-        recalcField();
         redraw();
     }
 
@@ -97,13 +99,16 @@ function MainController() {
             letter = letters[letterName];
         }
         recalc();
-        recalcField();
+        layers.field.recalc();
         redraw();
     }
 
     var actions = {
         tick: 0,
-        whirlsPeriod: 12
+        stop: false,
+        running: false,
+        whirls: false,
+        makingWhirls: false
     };
     var step = function() {
         if (actions.stop) {
@@ -114,14 +119,12 @@ function MainController() {
         if (actions.whirls) {
             worker.makeWhirls();
             actions.whirls = false;
-        } else if (actions.makingWhirls && actions.tick % actions.whirlsPeriod === 0) {
+        } else if (actions.makingWhirls && actions.tick % constants.whirlsPeriod === 0) {
             worker.makeWhirls();
         }
         worker.makeStep();
-        if (drawSpeed) {
-            speedLines = worker.getSpeedLines();
-        }
-        recalcField();
+        layers.speed.recalc();
+        layers.field.recalc();
         redraw();
         actions.tick++;
         setTimeout(step, 0);
@@ -148,11 +151,19 @@ function MainController() {
     }
 
     this.toggleSpeed = function() {
-        drawSpeed = !drawSpeed;
-        if (drawSpeed) {
-            speedLines = worker.getSpeedLines();
+        if (!layers.speed.lines) {
+            layers.speed = {
+                lines: null,
+                partitionStep: currentPartitionStep,
+                recalc: function() {
+                    this.lines = worker.getSpeedLines(partitions[this.partitionStep])
+                }
+            }
+            layers.speed.recalc();
         } else {
-            speedLines = null;
+            layers.speed = {
+                recalc: function(){}
+            }
         }
         redraw();
     }
@@ -160,16 +171,22 @@ function MainController() {
     this.scale = function(sign) {
         var scale;
         if (sign === '-') {
-            scale = -20;
+            scale = -constants.scaleStep;
         } else {
-            scale = 20;
+            scale = constants.scaleStep;
         }
         canvas.ratio += scale;
-        console.log(canvas.ratio);
-        partition = createPartition(canvas.width(), canvas.height(), 2 / canvas.ratio, 5 / canvas.ratio);
         recalc();
-        recalcField();
+        layers.field.recalc();
         redraw();
+    }
+
+    this.changePartitionStep = function(step) {
+        if (step === 'big') {
+            currentPartitionStep = constants.bigPartitionStep;
+        } else {
+            currentPartitionStep = constants.smallPartitionStep;
+        }
     }
 
 

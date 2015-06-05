@@ -25,7 +25,6 @@ function Canvas(canvasId) {
     this.canvas.addEventListener('dblclick', function(e) {
         e.preventDefault();
         var angle = Math.atan2(e.offsetY - this.baseY, -e.offsetX + this.baseX) % (2 * Math.PI);
-        console.log(angle);
         window.dispatchEvent(new CustomEvent('anglechange', {'detail': angle}));
     }.bind(this))
 }
@@ -77,49 +76,42 @@ Canvas.prototype.drawLines = function(partition, lines) {
 Canvas.prototype.drawField = function(partition, field) {
 	function get_color_by_value(value, min, max)
 	{
-		var arr_colors = {
-					// 0 : '256, 256, 256',
-					// 1 : '153, 255, 255',
-					// 2 :'51, 255, 204',
-					// 3 : '0, 204, 153',
-					// 4 : '51, 153, 255', 
-					// 5 : '51, 102, 204',  
-					// 6 : '0, 0, 204',
-					// 7 : '102, 51, 153',
-					// 8 : '102, 0, 102',
-					// 9 : '102, 0, 51',
-					// 10 : '153, 0, 0',
-					// 11: '51, 0, 51',
-					// 12 : '0, 0, 0'
-					0 : '224, 255, 255',
-					1 :'175, 238, 238',
-					2 : '0, 255, 255',
-					3 : '0, 204, 204',
-					3 : '64, 224, 208', 
-					4 : '72, 209, 204',  
-					5 : '0, 206, 209',
-					6 : '102, 204, 255',
-					7 : '51, 153, 204',
-					8 : '0, 102, 153',
-					9 : '0, 51, 102',
-					10 : '0, 0, 51'
-		}; 
-		var coef = Math.floor(256 / 11);
-		var color_point =  Math.floor((value - min) / (max - min) * 256);
-		var index = (color_point - color_point % coef) / coef;
-		// console.log(color_point, index, coef);
+		var arr_colors = [
+			//'256, 256, 256',
+			//'153, 255, 255',
+			//'51, 255, 204',
+			//'0, 204, 153',
+			//'51, 153, 255', 
+			//'51, 102, 204',  
+			//'0, 0, 204',
+			//'102, 51, 153',
+			//'102, 0, 102',
+			//'102, 0, 51',
+			//'153, 0, 0',
+			//'51, 0, 51',
+			//'0, 0, 0'
+			 '224, 255, 255',
+			'175, 238, 238',
+			 '0, 255, 255',
+			 '64, 224, 208', 
+			 '72, 209, 204',  
+			 '0, 206, 209',
+			 '102, 204, 255',
+			 '51, 153, 204',
+			 '0, 102, 153',
+			 '0, 51, 102',
+			 '0, 0, 51'
+		]; 
+		var index =  Math.floor((value - min) / (max - min) * arr_colors.length);
 		return arr_colors[index];
 	}
 
 	max_value = Math.max.apply(Math, field);
 	min_value = Math.min.apply(Math, field);
-	console.log(max_value, min_value);
 	for(var i = 0; i < partition.length; i++)
 	{
-		var color = get_color_by_value(field[i], min_value, max_value);
-		// console.log(color);
-		this.context.fillStyle = 'rgb(' + color + ')';
-		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, 3, 3);
+		this.context.fillStyle = 'rgb(' + get_color_by_value(field[i], min_value, max_value) + ')';
+		this.context.fillRect(partition[i].x * this.ratio, partition[i].y * this.ratio, partition.step, partition.step);
 	}
 }
 
@@ -135,6 +127,28 @@ Canvas.prototype.drawWhirls = function(whirls) {
         this.context.fill();
         this.context.closePath();
     }
+}
+
+Canvas.prototype.getPartition = function(step) {
+	var w = this.width();
+	var h = this.height();
+	var partition = new Array();
+	partition.step = step;
+	var i = -w / 2;
+	var j = -h / 2;
+	step = step / this.ratio;
+
+	while(i < w / 2)
+	{
+		j = -h / 2;
+		while(j < h / 2)
+		{
+			partition.push({x: i, y:j});
+			j = j+step;
+		}
+		i = i+step;
+	}
+	return partition;
 }
 
 Canvas.prototype.drawAxis = function(){

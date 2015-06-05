@@ -1,13 +1,14 @@
 
 function Worker(params) {
   this.letter = params.letter;
-  this.partition = params.partition;
   this.gamma0 = 1;
   this.alpha = params.angle || 0;
 
   this.whirls = [];
 
   this.gamma = this.findGamma();
+
+  this.partitionSpeedFields = {};
 }
 
 Worker.prototype.findVj = function(p, discrete_p, delta)
@@ -105,52 +106,46 @@ Worker.prototype.findPsi = function(point)
   var v = [Math.cos(this.alpha), Math.sin(this.alpha)];
 
   var psi = point.y * v[0] - point.x * v[1];
+
   for(var i = 0; i < this.letter.partition.length; ++i) {
-    psi -= this.gamma[i] * this.findPsij(this.letter.partition[i], point, this.letter.step * 0.5);
-   }
+    psi -= this.gamma[i] * this.findPsij(point, this.letter.partition[i], this.letter.step * 0.5);
+  }
 
-   for(var i = 0; i < this.whirls.length; ++i) {
-     psi -= this.whirls[i].gamma * this.findPsij(this.whirls[i].location, point, this.letter.step * 0.5);
-   }
-  // for(var i = 0; i < this.letter.partition.length; ++i) {
-  //   psi -= this.gamma[i] * this.findPsij(point, this.letter.partition[i], this.letter.step * 0.5);
-  // }
-
-  // for(var i = 0; i < this.whirls.length; ++i) {
-  //   psi -= this.whirls[i].gamma * this.findPsij(point, this.whirls[i].location, this.letter.step * 0.5);
-  // }
+  for(var i = 0; i < this.whirls.length; ++i) {
+    psi -= this.whirls[i].gamma * this.findPsij(point, this.whirls[i].location, this.letter.step * 0.5);
+  }
 
   return psi;
 }
 
-Worker.prototype.calcSpeed = function() {
-  return this.partition.map(this.findSpeed.bind(this));
+Worker.prototype.calcSpeed = function(partition) {
+  return partition.map(this.findSpeed.bind(this));
 }
 
-Worker.prototype.getSpeedLines = function() {
-  this.requireSpeedCalc();
-  return this.speed;
+Worker.prototype.getSpeedLines = function(partition) {
+  this.requireSpeedCalc(partition);
+  return this.partitionSpeedFields[partition.step];
 }
 
-Worker.prototype.getPhiField = function() {
-  return this.partition.map(this.findPhi.bind(this));
+Worker.prototype.getPhiField = function(partition) {
+  return partition.map(this.findPhi.bind(this));
 }
 
-Worker.prototype.getPsiField = function() {
-  return this.partition.map(this.findPsi.bind(this));
+Worker.prototype.getPsiField = function(partition) {
+  return partition.map(this.findPsi.bind(this));
 }
 
-Worker.prototype.getSpeedField = function() {
-  this.requireSpeedCalc();
-  return this.speed.map(function(pointSpeed){
+Worker.prototype.getSpeedField = function(partition) {
+  this.requireSpeedCalc(partition);
+  return this.partitionSpeedFields[partition.step].map(function(pointSpeed){
     return math.sqrt(math.multiply(pointSpeed, pointSpeed));
   });
 }
 
-Worker.prototype.getPressureField = function() {
-  this.requireSpeedCalc();
+Worker.prototype.getPressureField = function(partition) {
+  this.requireSpeedCalc(partition);
   var v_inf = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  return this.speed.map(function(pointSpeed) {
+  return this.partitionSpeedFields[partition.step].map(function(pointSpeed) {
     return 1 - math.multiply(pointSpeed, pointSpeed) / math.multiply(v_inf, v_inf);
   });
 }
@@ -197,11 +192,11 @@ Worker.prototype.makeStep = function() {
   }
 
   this.gamma = this.findGamma();
-  this.speed = null;
+  this.partitionSpeedFields = {};
 }
 
-Worker.prototype.requireSpeedCalc = function() {
-  if(!this.speed) {
-    this.speed = this.calcSpeed();
+Worker.prototype.requireSpeedCalc = function(partition) {
+  if(!this.partitionSpeedFields[partition.step]) {
+    this.partitionSpeedFields[partition.step] = this.calcSpeed(partition);
   }
 }
