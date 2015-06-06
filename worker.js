@@ -270,11 +270,13 @@ Worker.prototype.getPhiDeriv = function(p) {
   }
   var findPart = function(start, end) {
     var result = 0;
+    var sumGamma = 0;
     for(var i = start; i < end - 1; i++)
     {
+      sumGamma += (this.gamma[i] - this.previousGamma[i]) / this.timeStep;
       var next = this.letter.partition[i + 1];
       var current = this.letter.partition[i];
-      result += math.multiply(
+      result += sumGamma * math.multiply(
         this.findVj(p, current, this.letter.step), 
         [next.x - current.x, next.y - current.y]
       );
