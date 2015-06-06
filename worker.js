@@ -9,6 +9,8 @@ function Worker(params) {
   this.gamma = this.findGamma();
 
   this.partitionSpeedFields = {};
+
+  this.timeStep = 0.04;
 }
 
 Worker.prototype.findVj = function(p, discrete_p, delta)
@@ -190,52 +192,58 @@ Worker.prototype.getSpeedField = function(partition) {
 Worker.prototype.getPressureField = function(partition) {
   this.requireSpeedCalc(partition);
   var v_inf = [Math.cos(this.alpha), Math.sin(this.alpha)];
-  return this.partitionSpeedFields[partition.step].map(function(pointSpeed) {
-    return 1 - math.multiply(pointSpeed, pointSpeed) / math.multiply(v_inf, v_inf);
-  });
+  var result = [];
+  for (var i = 0; i < partition.length; ++i) {
+    var pointSpeed = this.partitionSpeedFields[partition.step][i];
+    result.push(
+      1 - math.multiply(pointSpeed, pointSpeed) / math.multiply(v_inf, v_inf) -
+      1 / math.multiply(v_inf, v_inf) * this.getPhiDeriv(partition[i])
+    );
+  }
+  return result;
 }
 
 Worker.prototype.makeWhirls = function() {
   var whirls = [];
-  for(var i = 0; i < this.letter.partition.length; ++i) {
-    if (this.letter.partition[i].corner) {
-      var whirl = {
-        gamma: this.gamma[i],
-        location: {
-          x: this.letter.partition[i].x,
-          y: this.letter.partition[i].y
-        },
-        speed: this.findSpeed(this.letter.partition[i])
-      };
-      whirls.push(whirl);
-    }
+  for(var j = 0; j < this.letter.corners.length; ++j) {
+    var i = this.letter.corners[j];
+    var whirl = {
+      gamma: this.gamma[i],
+      location: {
+        x: this.letter.partition[i].x,
+        y: this.letter.partition[i].y
+      },
+      speed: this.findSpeed(this.letter.partition[i])
+    };
+    whirls.push(whirl);
+    this.letter.partition[i].lastWhirl = whirl;
   }
   this.whirls = this.whirls.concat(whirls);
 }
 
 Worker.prototype.makeStep = function() {
-  var timeCoeff = 30;
   for(var i = 0; i < this.whirls.length; ++i) {
     var speed = this.findSpeed(this.whirls[i].location);
     if (this.letter.inBorder(this.whirls[i].location, this.letter.step)) {
       var newPoint = {
-        x: this.whirls[i].location.x + speed[0] / timeCoeff,
-        y: this.whirls[i].location.y + speed[1] / timeCoeff
+        x: this.whirls[i].location.x + speed[0] * this.timeStep,
+        y: this.whirls[i].location.y + speed[1] * this.timeStep
       };
       if (this.letter.intersects([this.whirls[i].location, newPoint])) {
         this.whirls[i].location = {
-          x: this.whirls[i].location.x - speed[0] / timeCoeff,
-          y: this.whirls[i].location.y - speed[1] / timeCoeff
+          x: this.whirls[i].location.x - speed[0] * this.timeStep,
+          y: this.whirls[i].location.y - speed[1] * this.timeStep
         };
       } else {
         this.whirls[i].location = newPoint;
       }
     } else {
-      this.whirls[i].location.x += speed[0] / timeCoeff;
-      this.whirls[i].location.y += speed[1] / timeCoeff;
+      this.whirls[i].location.x += speed[0] * this.timeStep;
+      this.whirls[i].location.y += speed[1] * this.timeStep;
     }
   }
-
+  
+  this.previousGamma = this.gamma;
   this.gamma = this.findGamma();
   this.partitionSpeedFields = {};
 }
@@ -254,4 +262,51 @@ Worker.prototype.getLetterWhirls = function() {
       gamma: gamma[i]
     }
   });
+}
+
+Worker.prototype.getPhiDeriv = function(p) {
+  if (this.whirls.length === 0) {
+    return 0;
+  }
+  var findPart = function(start, end) {
+    var result = 0;
+    for(var i = start; i < end - 1; i++)
+    {
+      var next = this.letter.partition[i + 1];
+      var current = this.letter.partition[i];
+      result += math.multiply(
+        this.findVj(p, current, this.letter.step), 
+        [next.x - current.x, next.y - current.y]
+      );
+    }
+    return result;
+  };
+
+  findPart = findPart.bind(this);
+
+  var result = 0;
+  if (this.letter.breakpoint) {
+    result += findPart(0, this.letter.breakpoint) + findPart(this.letter.breakpoint, this.gamma.length);
+  } else {
+    result += findPart(0, this.gamma.length);
+  }
+
+  for (var j = 0; j < this.letter.corners.length; ++j) {
+    var i = this.letter.corners[j];
+    var edgePoint = this.letter.partition[i];
+    var whirl = edgePoint.lastWhirl;
+    result += whirl.gamma / this.timeStep * math.multiply(
+      this.findVj(p, edgePoint, this.letter.step),
+      [whirl.location.x - edgePoint.x, whirl.location.y - edgePoint.y]
+    );
+  }
+  result /= 2 * Math.PI;
+
+  for (var i = 0; i < this.whirls.length; ++i) {
+    result -= (this.whirls[i].gamma * math.multiply(this.findSpeed(this.whirls[i].location),
+      this.findVj(p, this.whirls[i].location, this.letter.step)));
+  }
+
+
+  return result;
 }

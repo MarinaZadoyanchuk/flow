@@ -10,14 +10,13 @@ var intersects = function(s0, s1) {
 };
 
 function LetterBuilder(begin, step) {
-  begin.corner = true;
   this.letter = {
     partition_middle: [],
     partition: [begin],
     step: step,
-    segments: []
+    segments: [],
+    corners: [0]
   }
-  this.letter.partition[0].corner = true;
   this.refreshBorders(begin);
 
   this.letter.inBorder = function(point, delta) {
@@ -89,7 +88,7 @@ LetterBuilder.prototype.addSegment = function(n, alpha, x, y) {
     };
     this.letter.partition.push(last);
   }
-  this.letter.partition[this.letter.partition.length - 1].corner = true;
+  this.letter.corners.push(this.letter.partition.length - 1);
   this.refreshBorders(last);
   segment.push(last);
   this.letter.segments.push(segment);
