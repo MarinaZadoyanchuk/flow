@@ -265,6 +265,7 @@ Worker.prototype.getLetterWhirls = function() {
 }
 
 Worker.prototype.getPhiDeriv = function(p) {
+  return 0;
   if (this.whirls.length === 0) {
     return 0;
   }
