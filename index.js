@@ -22,7 +22,19 @@ function MainController() {
     .addSegment(2, Math.PI / 2)
     .addSegment(6, 0)
     .addSegment(2, -Math.PI / 2)
-    .addSegment(7, -Math.PI / 2, 0, 0.75)
+    .addSegment(7, -Math.PI / 2, { from: { x: 0, y: 0.75}})
+    .getLetter();
+    
+    letters['R'] = (new LetterBuilder({x: -0.3, y: 0}, 0.1))
+    .addSegment(8, Math.PI / 2)
+    .addSegment(1, - 0.02 * Math.PI)
+    .addSegment(1, - 0.18 * Math.PI)
+    .addSegment(1, - 0.35 * Math.PI)
+    .addSegment(1, - 0.5 * Math.PI)
+    .addSegment(1, - 0.65 * Math.PI)
+    .addSegment(1, - 0.8 * Math.PI)
+    .addSegment(1, - 0.9 * Math.PI, {noWhirl: true})
+    .addSegment(5, - 0.27 * Math.PI)
     .getLetter();
     
     letters['slash'] = (new LetterBuilder({x: -9, y: 8}, 0.1))

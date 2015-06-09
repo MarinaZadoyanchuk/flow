@@ -230,10 +230,7 @@ Worker.prototype.makeStep = function() {
         y: this.whirls[i].location.y + speed[1] * this.timeStep
       };
       if (this.letter.intersects([this.whirls[i].location, newPoint])) {
-        this.whirls[i].location = {
-          x: this.whirls[i].location.x - speed[0] * this.timeStep,
-          y: this.whirls[i].location.y - speed[1] * this.timeStep
-        };
+        
       } else {
         this.whirls[i].location = newPoint;
       }

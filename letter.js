@@ -60,11 +60,11 @@ LetterBuilder.prototype.refreshBorders = function(point) {
   }
 }
 
-LetterBuilder.prototype.addSegment = function(n, alpha, x, y) {
-  if (!(x && y) && !(x === 0)){
+LetterBuilder.prototype.addSegment = function(n, alpha, options) {
+  if (!(options && options.from)){
     var last = this.letter.partition[this.letter.partition.length - 1];
   } else {
-    var last = {x : x, y: y};
+    var last = options.from;
     this.letter.breakpoint = this.letter.partition.length;
   }
   var segment = [last];
@@ -88,7 +88,9 @@ LetterBuilder.prototype.addSegment = function(n, alpha, x, y) {
     };
     this.letter.partition.push(last);
   }
-  this.letter.corners.push(this.letter.partition.length - 1);
+  if (!(options && options.noWhirl)) {
+    this.letter.corners.push(this.letter.partition.length - 1);
+  }
   this.refreshBorders(last);
   segment.push(last);
   this.letter.segments.push(segment);
